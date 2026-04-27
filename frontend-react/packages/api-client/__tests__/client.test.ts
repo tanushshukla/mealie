@@ -13,9 +13,8 @@ describe("apiFetch", () => {
       new Response(JSON.stringify({ ok: true }), { status: 200 }),
     );
     await apiFetch("/api/test");
-    expect(fetchSpy.mock.calls[0]?.[1]?.headers).toMatchObject({
-      Authorization: "Bearer test-token",
-    });
+    const headers = fetchSpy.mock.calls[0]?.[1]?.headers as Headers;
+    expect(headers.get("Authorization")).toBe("Bearer test-token");
   });
 
   it("omits Authorization header when no token", async () => {
@@ -23,8 +22,8 @@ describe("apiFetch", () => {
       new Response(JSON.stringify({}), { status: 200 }),
     );
     await apiFetch("/api/test");
-    const headers = fetchSpy.mock.calls[0]?.[1]?.headers as Record<string, string>;
-    expect(headers?.["Authorization"]).toBeUndefined();
+    const headers = fetchSpy.mock.calls[0]?.[1]?.headers as Headers;
+    expect(headers.get("Authorization")).toBeNull();
   });
 
   it("throws ApiError on non-ok response", async () => {
@@ -38,11 +37,8 @@ describe("apiFetch", () => {
     vi.spyOn(global, "fetch").mockResolvedValue(
       new Response(JSON.stringify({}), { status: 401 }),
     );
-    try {
-      await apiFetch("/api/protected");
-    } catch (e) {
-      expect(e).toBeInstanceOf(ApiError);
-      expect((e as ApiError).status).toBe(401);
-    }
+    await expect(apiFetch("/api/protected")).rejects.toMatchObject({
+      status: 401,
+    });
   });
 });

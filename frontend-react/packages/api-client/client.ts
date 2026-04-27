@@ -19,16 +19,15 @@ export async function apiFetch<T>(
   path: string,
   init: RequestInit = {},
 ): Promise<T> {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    ...(init.headers as Record<string, string> | undefined),
-  };
-  if (_token) headers["Authorization"] = `Bearer ${_token}`;
+  const headers = new Headers(init.headers);
+  if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+  if (_token) headers.set("Authorization", `Bearer ${_token}`);
 
   const res = await fetch(path, { ...init, headers });
   if (!res.ok) {
-    const body = await res.json().catch(() => null);
+    const body = await res.text().then((t) => { try { return JSON.parse(t); } catch { return t || null; } });
     throw new ApiError(res.status, body, `API ${res.status}: ${path}`);
   }
+  if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
 }

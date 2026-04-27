@@ -1,4 +1,4 @@
-import { apiFetch } from "./client";
+import { apiFetch, ApiError } from "./client";
 import type { User } from "./types";
 
 export interface LoginResult {
@@ -18,7 +18,6 @@ export async function login(
   });
   if (!res.ok) {
     const err = await res.json().catch(() => null);
-    const { ApiError } = await import("./client");
     throw new ApiError(res.status, err, `Login failed: ${res.status}`);
   }
   return res.json() as Promise<LoginResult>;
