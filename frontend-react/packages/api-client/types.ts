@@ -92,3 +92,14 @@ export interface PaginationData<T> {
   total_pages: number;
   items: T[];
 }
+
+export interface RecipeListParams {
+  search?: string;
+  tags?: string[];
+  categories?: string[];
+  foods?: string[];
+  page?: number;
+  perPage?: number;
+  orderBy?: string;
+  orderDirection?: "asc" | "desc";
+}
