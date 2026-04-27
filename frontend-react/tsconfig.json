@@ -10,7 +10,8 @@
     "paths": {
       "@api-client": ["./packages/api-client/index.ts"]
     },
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["vitest/globals"]
   },
   "include": ["src", "packages"]
 }
