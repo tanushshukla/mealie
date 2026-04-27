@@ -1,1 +1,132 @@
-/* tokens - added in Task 2 */
+@import "tailwindcss";
+
+/* ── Palette ── */
+:root {
+  --sage-50:  #f3f7f1; --sage-100: #e6efe1; --sage-200: #cfdec6;
+  --sage-300: #a8c598; --sage-400: #7da26b; --sage-500: #5a8348;
+  --sage-600: #426634; --sage-700: #314e27; --sage-800: #21351a;
+  --sage-900: #142210;
+
+  --cream-50: #faf6ec; --cream-100: #f3ebd0;
+  --cream-200: #e9dba2; --cream-300: #dcc66c;
+
+  --paper-50:  #fbfaf6; --paper-100: #f5f3ec; --paper-200: #ebe7da;
+  --paper-300: #d9d4c1; --paper-400: #a8a293; --paper-500: #6f6a5e;
+  --paper-700: #3a382f; --paper-900: #1a1a14;
+
+  --tomato: #c64a3a;
+  --plum:   #6e3d63;
+  --sky:    #5b8aa0;
+
+  --radius-sm:   8px;
+  --radius:      14px;
+  --radius-lg:   22px;
+  --radius-pill: 999px;
+
+  --shadow-sm: 0 1px 2px rgba(20,34,16,.06), 0 1px 1px rgba(20,34,16,.04);
+  --shadow:    0 6px 20px -8px rgba(20,34,16,.18), 0 2px 6px -2px rgba(20,34,16,.08);
+  --shadow-lg: 0 24px 48px -16px rgba(20,34,16,.25), 0 8px 16px -8px rgba(20,34,16,.12);
+}
+
+/* ── Light theme (default) ── */
+:root, [data-theme="light"] {
+  --bg:           var(--paper-50);
+  --bg-elev:      #ffffff;
+  --bg-sunken:    var(--paper-100);
+  --bg-muted:     var(--paper-200);
+  --surface:      #ffffff;
+  --border:       #ebe7da;
+  --border-strong:#d9d4c1;
+  --text:         #1a2418;
+  --text-muted:   #5d6557;
+  --text-dim:     #8b9181;
+  --brand:        var(--sage-600);
+  --brand-soft:   var(--sage-100);
+  --brand-ink:    var(--sage-800);
+  --brand-fg:     #ffffff;
+  --accent:       var(--cream-200);
+  --accent-ink:   #5a4915;
+  --danger:       var(--tomato);
+  --chip-bg:      #ffffff;
+  --chip-border:  #e2dfd2;
+  --sidebar-bg:   #f8f5ea;
+  --sidebar-text: #3a382f;
+}
+
+/* ── Dark theme ── */
+[data-theme="dark"] {
+  --bg:           #14180f;
+  --bg-elev:      #1c2117;
+  --bg-sunken:    #0f1309;
+  --bg-muted:     #232a1d;
+  --surface:      #1c2117;
+  --border:       #2c3324;
+  --border-strong:#3a4430;
+  --text:         #ecead9;
+  --text-muted:   #a7ad97;
+  --text-dim:     #757b66;
+  --brand:        var(--sage-300);
+  --brand-soft:   #2a3a22;
+  --brand-ink:    var(--sage-100);
+  --brand-fg:     #14180f;
+  --accent:       #c8b15a;
+  --accent-ink:   #1a1a10;
+  --chip-bg:      #232a1d;
+  --chip-border:  #3a4430;
+  --sidebar-bg:   #181c12;
+  --sidebar-text: #f4f1de;
+}
+
+/* ── Base reset ── */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+h1,h2,h3,h4 {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+/* ── Tailwind semantic tokens ── */
+@theme {
+  --color-brand:         var(--brand);
+  --color-brand-soft:    var(--brand-soft);
+  --color-brand-ink:     var(--brand-ink);
+  --color-brand-fg:      var(--brand-fg);
+  --color-surface:       var(--surface);
+  --color-bg:            var(--bg);
+  --color-bg-elev:       var(--bg-elev);
+  --color-bg-sunken:     var(--bg-sunken);
+  --color-bg-muted:      var(--bg-muted);
+  --color-border:        var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text:          var(--text);
+  --color-text-muted:    var(--text-muted);
+  --color-text-dim:      var(--text-dim);
+  --color-accent:        var(--accent);
+  --color-accent-ink:    var(--accent-ink);
+  --color-danger:        var(--danger);
+  --color-sidebar-bg:    var(--sidebar-bg);
+  --color-sidebar-text:  var(--sidebar-text);
+
+  --font-serif: "Fraunces", "Source Serif 4", Georgia, serif;
+  --font-sans:  "Inter Tight", "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono:  "JetBrains Mono", ui-monospace, monospace;
+
+  --radius-sm:   8px;
+  --radius:      14px;
+  --radius-lg:   22px;
+  --radius-pill: 9999px;
+
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow);
+  --shadow-lg: var(--shadow-lg);
+}
