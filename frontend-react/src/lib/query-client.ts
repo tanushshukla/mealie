@@ -1,13 +1,16 @@
 import { QueryClient } from "@tanstack/react-query";
+import { ApiError } from "@api-client";
 import { authStore } from "./auth-store";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: (failureCount, error) => {
-        if (error instanceof Error && "status" in error && (error as { status: number }).status === 401) {
+        if (error instanceof ApiError && error.status === 401) {
           authStore.clearToken();
-          window.location.href = "/login";
+          if (window.location.pathname !== "/login") {
+            window.location.href = "/login";
+          }
           return false;
         }
         return failureCount < 2;

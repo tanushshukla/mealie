@@ -14,7 +14,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 
     const publicPaths = ["/login", "/forgot-password"];
     const isPublic = publicPaths.some((p) => location.pathname.startsWith(p));
-    if (!isPublic && !authStore.isAuthenticated()) {
+    if (!isPublic && !token) {
       throw redirect({ to: "/login" });
     }
   },
