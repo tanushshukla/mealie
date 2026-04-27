@@ -21,7 +21,7 @@
   --radius-sm:   8px;
   --radius:      14px;
   --radius-lg:   22px;
-  --radius-pill: 999px;
+  --radius-pill: 9999px;
 
   --shadow-sm: 0 1px 2px rgba(20,34,16,.06), 0 1px 1px rgba(20,34,16,.04);
   --shadow:    0 6px 20px -8px rgba(20,34,16,.18), 0 2px 6px -2px rgba(20,34,16,.08);
@@ -71,6 +71,7 @@
   --brand-fg:     #14180f;
   --accent:       #c8b15a;
   --accent-ink:   #1a1a10;
+  --danger:       #e06555;
   --chip-bg:      #232a1d;
   --chip-border:  #3a4430;
   --sidebar-bg:   #181c12;
@@ -96,7 +97,7 @@ h1,h2,h3,h4 {
 }
 
 /* ── Tailwind semantic tokens ── */
-@theme {
+@theme inline {
   --color-brand:         var(--brand);
   --color-brand-soft:    var(--brand-soft);
   --color-brand-ink:     var(--brand-ink);
@@ -114,8 +115,12 @@ h1,h2,h3,h4 {
   --color-accent:        var(--accent);
   --color-accent-ink:    var(--accent-ink);
   --color-danger:        var(--danger);
+  --color-chip-bg:       var(--chip-bg);
+  --color-chip-border:   var(--chip-border);
   --color-sidebar-bg:    var(--sidebar-bg);
   --color-sidebar-text:  var(--sidebar-text);
+  --color-plum:          var(--plum);
+  --color-sky:           var(--sky);
 
   --font-serif: "Fraunces", "Source Serif 4", Georgia, serif;
   --font-sans:  "Inter Tight", "Inter", system-ui, -apple-system, sans-serif;
@@ -126,7 +131,7 @@ h1,h2,h3,h4 {
   --radius-lg:   22px;
   --radius-pill: 9999px;
 
-  --shadow-sm: var(--shadow-sm);
+  --shadow-sm: 0 1px 2px rgba(20,34,16,.06), 0 1px 1px rgba(20,34,16,.04);
   --shadow-md: var(--shadow);
-  --shadow-lg: var(--shadow-lg);
+  --shadow-lg: 0 24px 48px -16px rgba(20,34,16,.25), 0 8px 16px -8px rgba(20,34,16,.12);
 }
