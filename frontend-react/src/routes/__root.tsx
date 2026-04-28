@@ -2,6 +2,7 @@ import {
   createRootRouteWithContext,
   Outlet,
   redirect,
+  useRouterState,
 } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import type { QueryClient } from "@tanstack/react-query";
@@ -31,21 +32,21 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 });
 
 function RootLayout() {
-  const isPublic = PUBLIC_PATHS.some((p) =>
-    window.location.pathname.startsWith(p),
-  );
+  const { location } = useRouterState();
+  const isPublic = PUBLIC_PATHS.some((p) => location.pathname.startsWith(p));
   if (isPublic) return <Outlet />;
   return <AppShell />;
 }
 
 function AppShell() {
+  const { location } = useRouterState();
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isTablet, setIsTablet] = useState(
     window.innerWidth >= 768 && window.innerWidth < 1024,
   );
-  const groupSlug = window.location.pathname.split("/")[2] ?? "home";
+  const groupSlug = location.pathname.split("/")[2] ?? "home";
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
