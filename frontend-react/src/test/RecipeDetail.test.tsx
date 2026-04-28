@@ -57,7 +57,7 @@ describe("RecipeHero", () => {
 
 describe("IngredientsList", () => {
   const ingredients: RecipeIngredient[] = [
-    { quantity: 200, unit: { name: "grams", abbreviation: "g" }, food: { name: "spaghetti" } },
+    { quantity: 200, unit: { name: "grams", abbreviation: "g", useAbbreviation: true }, food: { name: "spaghetti" } },
     { quantity: 2, food: { name: "eggs" } },
     { display: "Salt to taste" },
   ];

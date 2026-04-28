@@ -51,14 +51,22 @@ export interface RecipeSummary {
 
 export interface RecipeIngredient {
   quantity?: number | null;
-  unit?: { name: string; abbreviation?: string } | null;
-  food?: { name: string } | null;
+  unit?: {
+    name: string;
+    pluralName?: string | null;
+    abbreviation?: string | null;
+    pluralAbbreviation?: string | null;
+    useAbbreviation?: boolean | null;
+    fraction?: boolean | null;
+  } | null;
+  food?: { name: string; pluralName?: string | null } | null;
   note?: string | null;
   display?: string | null;
   title?: string | null;
   isFood?: boolean | null;
   disableAmount?: boolean | null;
   originalText?: string | null;
+  referenceId?: string | null;
 }
 
 export interface RecipeStep {

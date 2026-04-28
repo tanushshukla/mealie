@@ -208,7 +208,7 @@ function RecipeContent({ recipe, groupSlug }: { recipe: Recipe; groupSlug: strin
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start gap-6">
-        <div className="bg-surface rounded-lg border border-border overflow-hidden">
+        <div className="bg-surface rounded-lg border border-border">
           <div className="flex border-b border-border">
             <button
               onClick={() => setDetailTab("ingredients")}
