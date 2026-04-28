@@ -2,6 +2,12 @@ import { Link, useRouterState } from "@tanstack/react-router";
 
 const TABS = [
   {
+    label: "Home",
+    href: (s: string) => `/g/${s}/home`,
+    icon: "🏠",
+    matchFn: (path: string, s: string) => path === `/g/${s}/home`,
+  },
+  {
     label: "Recipes",
     href: (s: string) => `/g/${s}`,
     icon: "📖",

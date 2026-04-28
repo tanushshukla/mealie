@@ -15,13 +15,13 @@ function LoginPage() {
       const me = await getMe();
       const slug = me.groupSlug;
       if (slug) {
-        navigate({ to: "/g/$groupSlug", params: { groupSlug: slug } });
+        navigate({ to: "/g/$groupSlug/home", params: { groupSlug: slug } });
         return;
       }
     } catch {
       // fall through to default
     }
-    navigate({ to: "/g/$groupSlug", params: { groupSlug: "home" } });
+    navigate({ to: "/g/$groupSlug/home", params: { groupSlug: "home" } });
   }
 
   return (

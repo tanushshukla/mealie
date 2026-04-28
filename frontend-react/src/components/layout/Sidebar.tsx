@@ -12,6 +12,7 @@ export function Sidebar({ groupSlug, onClose, mobile, collapsed }: SidebarProps)
   const path = state.location.pathname;
 
   const navMain = [
+    { id: "home", label: "Home", href: `/g/${groupSlug}/home`, icon: "🏠" },
     { id: "recipes", label: "Recipes", href: `/g/${groupSlug}`, icon: "📖" },
     { id: "finder", label: "Recipe Finder", href: `/g/${groupSlug}/recipes/finder`, icon: "✨" },
     { id: "planner", label: "Meal Planner", href: `/g/${groupSlug}/planner`, icon: "📅" },
@@ -25,8 +26,8 @@ export function Sidebar({ groupSlug, onClose, mobile, collapsed }: SidebarProps)
           🍴
         </div>
         {navMain.map((n) => {
-          const active =
-            path === n.href || (n.href !== `/g/${groupSlug}` && path.startsWith(n.href));
+          const exactOnly = n.href === `/g/${groupSlug}` || n.href === `/g/${groupSlug}/home`;
+          const active = path === n.href || (!exactOnly && path.startsWith(n.href));
           return (
             <Link
               key={n.id}
@@ -64,8 +65,8 @@ export function Sidebar({ groupSlug, onClose, mobile, collapsed }: SidebarProps)
 
       <div className="text-[11px] font-semibold uppercase tracking-widest text-text-dim px-2.5 mt-3 mb-1.5">Cook</div>
       {navMain.map((n) => {
-        const active =
-          path === n.href || (n.href !== `/g/${groupSlug}` && path.startsWith(n.href));
+        const exactOnly = n.href === `/g/${groupSlug}` || n.href === `/g/${groupSlug}/home`;
+        const active = path === n.href || (!exactOnly && path.startsWith(n.href));
         return (
           <Link
             key={n.id}

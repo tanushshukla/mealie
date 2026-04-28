@@ -14,6 +14,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as GGroupSlugIndexRouteImport } from './routes/g/$groupSlug/index'
 import { Route as GGroupSlugShoppingIndexRouteImport } from './routes/g/$groupSlug/shopping/index'
 import { Route as GGroupSlugPlannerIndexRouteImport } from './routes/g/$groupSlug/planner/index'
+import { Route as GGroupSlugHomeIndexRouteImport } from './routes/g/$groupSlug/home/index'
 import { Route as GGroupSlugRecipesFinderIndexRouteImport } from './routes/g/$groupSlug/recipes/finder/index'
 import { Route as GGroupSlugRSlugIndexRouteImport } from './routes/g/$groupSlug/r/$slug/index'
 
@@ -42,6 +43,11 @@ const GGroupSlugPlannerIndexRoute = GGroupSlugPlannerIndexRouteImport.update({
   path: '/g/$groupSlug/planner/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GGroupSlugHomeIndexRoute = GGroupSlugHomeIndexRouteImport.update({
+  id: '/g/$groupSlug/home/',
+  path: '/g/$groupSlug/home/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GGroupSlugRecipesFinderIndexRoute =
   GGroupSlugRecipesFinderIndexRouteImport.update({
     id: '/g/$groupSlug/recipes/finder/',
@@ -58,6 +64,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/g/$groupSlug/': typeof GGroupSlugIndexRoute
+  '/g/$groupSlug/home/': typeof GGroupSlugHomeIndexRoute
   '/g/$groupSlug/planner/': typeof GGroupSlugPlannerIndexRoute
   '/g/$groupSlug/shopping/': typeof GGroupSlugShoppingIndexRoute
   '/g/$groupSlug/r/$slug/': typeof GGroupSlugRSlugIndexRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/g/$groupSlug': typeof GGroupSlugIndexRoute
+  '/g/$groupSlug/home': typeof GGroupSlugHomeIndexRoute
   '/g/$groupSlug/planner': typeof GGroupSlugPlannerIndexRoute
   '/g/$groupSlug/shopping': typeof GGroupSlugShoppingIndexRoute
   '/g/$groupSlug/r/$slug': typeof GGroupSlugRSlugIndexRoute
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/g/$groupSlug/': typeof GGroupSlugIndexRoute
+  '/g/$groupSlug/home/': typeof GGroupSlugHomeIndexRoute
   '/g/$groupSlug/planner/': typeof GGroupSlugPlannerIndexRoute
   '/g/$groupSlug/shopping/': typeof GGroupSlugShoppingIndexRoute
   '/g/$groupSlug/r/$slug/': typeof GGroupSlugRSlugIndexRoute
@@ -88,6 +97,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/g/$groupSlug/'
+    | '/g/$groupSlug/home/'
     | '/g/$groupSlug/planner/'
     | '/g/$groupSlug/shopping/'
     | '/g/$groupSlug/r/$slug/'
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/g/$groupSlug'
+    | '/g/$groupSlug/home'
     | '/g/$groupSlug/planner'
     | '/g/$groupSlug/shopping'
     | '/g/$groupSlug/r/$slug'
@@ -106,6 +117,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/g/$groupSlug/'
+    | '/g/$groupSlug/home/'
     | '/g/$groupSlug/planner/'
     | '/g/$groupSlug/shopping/'
     | '/g/$groupSlug/r/$slug/'
@@ -116,6 +128,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   GGroupSlugIndexRoute: typeof GGroupSlugIndexRoute
+  GGroupSlugHomeIndexRoute: typeof GGroupSlugHomeIndexRoute
   GGroupSlugPlannerIndexRoute: typeof GGroupSlugPlannerIndexRoute
   GGroupSlugShoppingIndexRoute: typeof GGroupSlugShoppingIndexRoute
   GGroupSlugRSlugIndexRoute: typeof GGroupSlugRSlugIndexRoute
@@ -159,6 +172,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GGroupSlugPlannerIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/g/$groupSlug/home/': {
+      id: '/g/$groupSlug/home/'
+      path: '/g/$groupSlug/home'
+      fullPath: '/g/$groupSlug/home/'
+      preLoaderRoute: typeof GGroupSlugHomeIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/g/$groupSlug/recipes/finder/': {
       id: '/g/$groupSlug/recipes/finder/'
       path: '/g/$groupSlug/recipes/finder'
@@ -180,6 +200,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   GGroupSlugIndexRoute: GGroupSlugIndexRoute,
+  GGroupSlugHomeIndexRoute: GGroupSlugHomeIndexRoute,
   GGroupSlugPlannerIndexRoute: GGroupSlugPlannerIndexRoute,
   GGroupSlugShoppingIndexRoute: GGroupSlugShoppingIndexRoute,
   GGroupSlugRSlugIndexRoute: GGroupSlugRSlugIndexRoute,
