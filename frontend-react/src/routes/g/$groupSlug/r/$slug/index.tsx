@@ -207,7 +207,7 @@ function RecipeContent({ recipe, groupSlug }: { recipe: Recipe; groupSlug: strin
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[320px_minmax(0,1fr)] gap-6">
         <div className="bg-surface rounded-lg border border-border overflow-hidden">
           <div className="flex border-b border-border">
             <button

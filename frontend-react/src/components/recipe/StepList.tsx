@@ -57,7 +57,7 @@ export function StepList({ steps }: StepListProps) {
               >
                 {num}
               </span>
-              <p className="text-sm text-text leading-relaxed pt-1"><InlineMarkdown text={step.text} /></p>
+              <p className="text-sm text-text leading-relaxed pt-1 break-words"><InlineMarkdown text={step.text} /></p>
             </div>
           ))}
         </div>
