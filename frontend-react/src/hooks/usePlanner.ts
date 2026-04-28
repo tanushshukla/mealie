@@ -6,6 +6,7 @@ import {
   listShoppingLists,
   getShoppingList,
   updateShoppingItem,
+  addRecipeToShoppingList,
 } from "@api-client";
 import type { PlanEntryType } from "@api-client";
 
@@ -61,5 +62,23 @@ export function useToggleShoppingItem(listId: string) {
     mutationFn: ({ id, checked }: { id: string; checked: boolean }) =>
       updateShoppingItem(id, { checked, shoppingListId: listId }),
     onSuccess: () => qc.invalidateQueries({ queryKey: plannerKeys.shoppingList(listId) }),
+  });
+}
+
+export function useAddToMealPlan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (entry: { date: string; entryType: PlanEntryType; recipeId?: string; title?: string }) =>
+      createMealPlan(entry),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["mealplans"] }),
+  });
+}
+
+export function useAddRecipeToShoppingList() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ listId, recipeId }: { listId: string; recipeId: string }) =>
+      addRecipeToShoppingList(listId, recipeId),
+    onSuccess: (_, { listId }) => qc.invalidateQueries({ queryKey: plannerKeys.shoppingList(listId) }),
   });
 }

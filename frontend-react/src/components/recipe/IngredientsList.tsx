@@ -3,21 +3,32 @@ import type { RecipeIngredient } from "@api-client";
 interface IngredientsListProps {
   ingredients: RecipeIngredient[];
   bare?: boolean;
+  scaleFactor?: number;
 }
 
-function formatIngredient(ing: RecipeIngredient): string {
-  if (ing.display) return ing.display;
-  if (ing.originalText) return ing.originalText;
+function formatQty(n: number): string {
+  if (Number.isInteger(n)) return String(n);
+  return n.toFixed(2).replace(/\.?0+$/, "");
+}
+
+function formatIngredient(ing: RecipeIngredient, scaleFactor = 1): string {
+  const rawQty = ing.quantity;
+  const hasQty = rawQty != null && rawQty !== 0 && ing.disableAmount !== true;
+
+  if (!hasQty || scaleFactor === 1) {
+    if (ing.display) return ing.display;
+    if (ing.originalText) return ing.originalText;
+  }
 
   const parts: string[] = [];
-  if (ing.quantity != null && ing.quantity !== 0) parts.push(String(ing.quantity));
+  if (hasQty) parts.push(formatQty(rawQty! * scaleFactor));
   if (ing.unit) parts.push(ing.unit.abbreviation ?? ing.unit.name);
   if (ing.food) parts.push(ing.food.name);
   if (ing.note) parts.push(`(${ing.note})`);
   return parts.join(" ") || "—";
 }
 
-export function IngredientsList({ ingredients, bare }: IngredientsListProps) {
+export function IngredientsList({ ingredients, bare, scaleFactor = 1 }: IngredientsListProps) {
   if (ingredients.length === 0) return null;
 
   const sections: { title?: string; items: RecipeIngredient[] }[] = [];
@@ -46,7 +57,7 @@ export function IngredientsList({ ingredients, bare }: IngredientsListProps) {
             {section.items.map((ing, ii) => (
               <li key={ii} className="flex items-start gap-2 text-sm text-text">
                 <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-brand shrink-0" />
-                {formatIngredient(ing)}
+                {formatIngredient(ing, scaleFactor)}
               </li>
             ))}
           </ul>

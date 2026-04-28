@@ -1,39 +1,177 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useRecipe } from "../../../../../hooks/useRecipes";
+import {
+  useAddToMealPlan,
+  useAddRecipeToShoppingList,
+  useShoppingLists,
+} from "../../../../../hooks/usePlanner";
 import { RecipeHero } from "../../../../../components/recipe/RecipeHero";
 import { IngredientsList } from "../../../../../components/recipe/IngredientsList";
 import { NutritionPanel } from "../../../../../components/recipe/NutritionPanel";
 import { StepList } from "../../../../../components/recipe/StepList";
+import type { Recipe } from "@api-client";
+import type { PlanEntryType } from "@api-client";
 
 export const Route = createFileRoute("/g/$groupSlug/r/$slug/")({
   component: RecipeDetailPage,
 });
 
-function RecipeDetailPage() {
-  const { groupSlug, slug } = Route.useParams();
-  const { data: recipe, isLoading, isError } = useRecipe(slug);
+const MEAL_TYPES: { value: PlanEntryType; label: string }[] = [
+  { value: "breakfast", label: "Breakfast" },
+  { value: "lunch", label: "Lunch" },
+  { value: "dinner", label: "Dinner" },
+  { value: "side", label: "Side" },
+  { value: "snack", label: "Snack" },
+  { value: "drink", label: "Drink" },
+  { value: "dessert", label: "Dessert" },
+];
+
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function AddToPlanModal({
+  recipeId,
+  onClose,
+}: {
+  recipeId: string;
+  onClose: () => void;
+}) {
+  const [date, setDate] = useState(todayISO);
+  const [mealType, setMealType] = useState<PlanEntryType>("dinner");
+  const addToMealPlan = useAddToMealPlan();
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    await addToMealPlan.mutateAsync({ date, entryType: mealType, recipeId });
+    onClose();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
+      <form
+        className="bg-surface rounded-xl border border-border shadow-xl w-full max-w-sm p-6 flex flex-col gap-5"
+        onClick={(e) => e.stopPropagation()}
+        onSubmit={handleSubmit}
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="font-serif text-xl text-text">Add to meal plan</h2>
+          <button type="button" onClick={onClose} className="w-8 h-8 flex items-center justify-center text-text-muted hover:text-text rounded-lg">✕</button>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wider text-text-dim">Date</label>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg border border-border bg-bg text-text text-sm focus:outline-none focus:ring-2 focus:ring-brand/25 focus:border-brand"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wider text-text-dim">Meal</label>
+          <div className="grid grid-cols-4 gap-1.5">
+            {MEAL_TYPES.map((mt) => (
+              <button
+                key={mt.value}
+                type="button"
+                onClick={() => setMealType(mt.value)}
+                className={`py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  mealType === mt.value
+                    ? "bg-brand text-brand-fg"
+                    : "bg-bg-elev text-text-muted hover:text-text border border-border"
+                }`}
+              >
+                {mt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={addToMealPlan.isPending}
+          className="w-full py-2.5 rounded-full bg-brand text-brand-fg text-sm font-medium hover:bg-brand-ink transition-colors disabled:opacity-50"
+        >
+          {addToMealPlan.isPending ? "Adding…" : "Add to plan"}
+        </button>
+
+        {addToMealPlan.isError && (
+          <p className="text-xs text-danger text-center">Failed to add. Please try again.</p>
+        )}
+      </form>
+    </div>
+  );
+}
+
+function AddToShoppingModal({
+  recipeId,
+  onClose,
+}: {
+  recipeId: string;
+  onClose: () => void;
+}) {
+  const { data: lists, isLoading } = useShoppingLists();
+  const addToList = useAddRecipeToShoppingList();
+  const [done, setDone] = useState(false);
+
+  async function handleAdd(listId: string) {
+    await addToList.mutateAsync({ listId, recipeId });
+    setDone(true);
+    setTimeout(onClose, 800);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
+      <div
+        className="bg-surface rounded-xl border border-border shadow-xl w-full max-w-sm p-6 flex flex-col gap-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="font-serif text-xl text-text">Add to shopping list</h2>
+          <button type="button" onClick={onClose} className="w-8 h-8 flex items-center justify-center text-text-muted hover:text-text rounded-lg">✕</button>
+        </div>
+
+        {done ? (
+          <p className="text-sm text-brand text-center py-4">Added to list!</p>
+        ) : isLoading ? (
+          <p className="text-sm text-text-muted text-center py-4">Loading lists…</p>
+        ) : !lists || lists.length === 0 ? (
+          <p className="text-sm text-text-muted text-center py-4">No shopping lists found.</p>
+        ) : (
+          <ul className="flex flex-col gap-1.5">
+            {lists.map((list) => (
+              <li key={list.id}>
+                <button
+                  onClick={() => handleAdd(list.id)}
+                  disabled={addToList.isPending}
+                  className="w-full text-left px-4 py-3 rounded-lg border border-border bg-bg-elev hover:border-brand hover:bg-brand-soft text-sm font-medium text-text transition-colors disabled:opacity-50"
+                >
+                  {list.name}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {addToList.isError && (
+          <p className="text-xs text-danger text-center">Failed to add ingredients. Please try again.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function RecipeContent({ recipe, groupSlug }: { recipe: Recipe; groupSlug: string }) {
   const [detailTab, setDetailTab] = useState<"ingredients" | "nutrition">("ingredients");
+  const [servings, setServings] = useState(recipe.recipeServings ?? 1);
+  const [planModalOpen, setPlanModalOpen] = useState(false);
+  const [shoppingModalOpen, setShoppingModalOpen] = useState(false);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[40vh] text-text-muted">
-        Loading recipe…
-      </div>
-    );
-  }
-
-  if (isError || !recipe) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[40vh] gap-3 text-text-muted">
-        <p>Recipe not found.</p>
-        <Link to="/g/$groupSlug" params={{ groupSlug }} className="text-sm text-brand hover:underline">
-          ← Back to recipes
-        </Link>
-      </div>
-    );
-  }
-
+  const baseServings = recipe.recipeServings ?? 1;
+  const scaleFactor = servings / baseServings;
   const ingredients = recipe.recipeIngredient ?? [];
   const steps = recipe.recipeInstructions ?? [];
   const hasNutrition = !!recipe.nutrition && Object.values(recipe.nutrition).some((v) => v != null && v !== "");
@@ -49,6 +187,25 @@ function RecipeDetailPage() {
       </nav>
 
       <RecipeHero recipe={recipe} />
+
+      {recipe.id && (
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setPlanModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-bg-elev text-sm font-medium text-text hover:border-brand hover:bg-brand-soft hover:text-brand-ink transition-colors"
+          >
+            <span>📅</span>
+            <span>Add to meal plan</span>
+          </button>
+          <button
+            onClick={() => setShoppingModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-bg-elev text-sm font-medium text-text hover:border-brand hover:bg-brand-soft hover:text-brand-ink transition-colors"
+          >
+            <span>🛒</span>
+            <span>Add to shopping list</span>
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
         <div className="bg-surface rounded-lg border border-border overflow-hidden">
@@ -76,9 +233,33 @@ function RecipeDetailPage() {
               </button>
             )}
           </div>
+
+          {detailTab === "ingredients" && recipe.recipeServings != null && (
+            <div className="flex items-center justify-between px-5 pt-4">
+              <span className="text-xs font-semibold uppercase tracking-wider text-text-dim">Servings</span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setServings((s) => Math.max(1, s - 1))}
+                  className="w-7 h-7 rounded-full border border-border bg-bg-elev flex items-center justify-center text-text hover:border-brand hover:text-brand transition-colors text-base leading-none"
+                  aria-label="Decrease servings"
+                >
+                  −
+                </button>
+                <span className="w-8 text-center text-sm font-semibold text-text tabular-nums">{servings}</span>
+                <button
+                  onClick={() => setServings((s) => s + 1)}
+                  className="w-7 h-7 rounded-full border border-border bg-bg-elev flex items-center justify-center text-text hover:border-brand hover:text-brand transition-colors text-base leading-none"
+                  aria-label="Increase servings"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="p-5">
             {detailTab === "ingredients" ? (
-              <IngredientsList ingredients={ingredients} bare />
+              <IngredientsList ingredients={ingredients} bare scaleFactor={scaleFactor} />
             ) : (
               recipe.nutrition && <NutritionPanel nutrition={recipe.nutrition} bare />
             )}
@@ -99,6 +280,39 @@ function RecipeDetailPage() {
           ))}
         </div>
       )}
+
+      {planModalOpen && recipe.id && (
+        <AddToPlanModal recipeId={recipe.id} onClose={() => setPlanModalOpen(false)} />
+      )}
+      {shoppingModalOpen && recipe.id && (
+        <AddToShoppingModal recipeId={recipe.id} onClose={() => setShoppingModalOpen(false)} />
+      )}
     </div>
   );
+}
+
+function RecipeDetailPage() {
+  const { groupSlug, slug } = Route.useParams();
+  const { data: recipe, isLoading, isError } = useRecipe(slug);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[40vh] text-text-muted">
+        Loading recipe…
+      </div>
+    );
+  }
+
+  if (isError || !recipe) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[40vh] gap-3 text-text-muted">
+        <p>Recipe not found.</p>
+        <Link to="/g/$groupSlug" params={{ groupSlug }} className="text-sm text-brand hover:underline">
+          ← Back to recipes
+        </Link>
+      </div>
+    );
+  }
+
+  return <RecipeContent recipe={recipe} groupSlug={groupSlug} />;
 }

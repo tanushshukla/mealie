@@ -44,3 +44,7 @@ export async function updateShoppingItem(
     body: JSON.stringify(patch),
   });
 }
+
+export async function addRecipeToShoppingList(listId: string, recipeId: string): Promise<void> {
+  return apiFetch(`/api/households/shopping/lists/${listId}/recipe/${recipeId}`, { method: "POST" });
+}
