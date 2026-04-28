@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import type { QueryClient } from "@tanstack/react-query";
 import { authStore } from "../lib/auth-store";
 import { setToken } from "@api-client";
+import { useMe } from "../hooks/useAuth";
 import { Sidebar } from "../components/layout/Sidebar";
 import { Topbar } from "../components/layout/Topbar";
 import { MobileTabbar } from "../components/layout/MobileTabbar";
@@ -40,13 +41,19 @@ function RootLayout() {
 
 function AppShell() {
   const { location } = useRouterState();
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [theme, setTheme] = useState<"light" | "dark">(
+    () => (localStorage.getItem("theme") === "dark" ? "dark" : "light"),
+  );
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isTablet, setIsTablet] = useState(
     window.innerWidth >= 768 && window.innerWidth < 1024,
   );
   const groupSlug = location.pathname.split("/")[2] ?? "home";
+  const { data: me } = useMe();
+  const userInitials = me?.fullName
+    ? me.fullName.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()
+    : (me?.username?.[0] ?? "U").toUpperCase();
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -61,7 +68,12 @@ function AppShell() {
     return () => window.removeEventListener("resize", update);
   }, []);
 
-  const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
+  const toggleTheme = () =>
+    setTheme((t) => {
+      const next = t === "dark" ? "light" : "dark";
+      localStorage.setItem("theme", next);
+      return next;
+    });
 
   return (
     <div
@@ -85,6 +97,7 @@ function AppShell() {
           mobile={isMobile}
           onMenu={() => setMobileNavOpen(true)}
           groupSlug={groupSlug}
+          userInitials={userInitials}
         />
         <main className={`flex-1 ${isMobile ? "pb-20" : ""}`}>
           <Outlet />

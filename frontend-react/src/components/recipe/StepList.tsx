@@ -1,5 +1,23 @@
 import type { RecipeStep } from "@api-client";
 
+function InlineMarkdown({ text }: { text: string }) {
+  const pattern = /(\*\*(.+?)\*\*|\*(.+?)\*|\[(.+?)\]\((.+?)\))/g;
+  const matches = [...text.matchAll(pattern)];
+  if (matches.length === 0) return <>{text}</>;
+
+  const parts: React.ReactNode[] = [];
+  let last = 0;
+  matches.forEach((m, i) => {
+    if (m.index > last) parts.push(text.slice(last, m.index));
+    if (m[0].startsWith("**")) parts.push(<strong key={i}>{m[2]}</strong>);
+    else if (m[0].startsWith("*")) parts.push(<em key={i}>{m[3]}</em>);
+    else parts.push(<a key={i} href={m[5]} target="_blank" rel="noopener noreferrer" className="text-brand underline">{m[4]}</a>);
+    last = (m.index ?? 0) + m[0].length;
+  });
+  if (last < text.length) parts.push(text.slice(last));
+  return <>{parts}</>;
+}
+
 interface StepListProps {
   steps: RecipeStep[];
 }
@@ -39,7 +57,7 @@ export function StepList({ steps }: StepListProps) {
               >
                 {num}
               </span>
-              <p className="text-sm text-text leading-relaxed pt-1">{step.text}</p>
+              <p className="text-sm text-text leading-relaxed pt-1"><InlineMarkdown text={step.text} /></p>
             </div>
           ))}
         </div>

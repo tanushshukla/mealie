@@ -1,4 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+import { useMe, useLogout } from "../../hooks/useAuth";
 
 interface SidebarProps {
   groupSlug: string;
@@ -10,6 +11,12 @@ interface SidebarProps {
 export function Sidebar({ groupSlug, onClose, mobile, collapsed }: SidebarProps) {
   const state = useRouterState();
   const path = state.location.pathname;
+  const { data: me } = useMe();
+  const logout = useLogout();
+  const displayName = me?.fullName ?? me?.username ?? "Account";
+  const initials = me?.fullName
+    ? me.fullName.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()
+    : (me?.username?.[0] ?? "U").toUpperCase();
 
   const navMain = [
     { id: "home", label: "Home", href: `/g/${groupSlug}/home`, icon: "🏠" },
@@ -43,6 +50,13 @@ export function Sidebar({ groupSlug, onClose, mobile, collapsed }: SidebarProps)
             </Link>
           );
         })}
+        <button
+          onClick={logout}
+          title="Sign out"
+          className="mt-auto w-10 h-10 rounded-[10px] flex items-center justify-center text-base text-text-dim hover:text-danger hover:bg-danger/8 transition-colors"
+        >
+          ↩
+        </button>
       </aside>
     );
   }
@@ -84,14 +98,20 @@ export function Sidebar({ groupSlug, onClose, mobile, collapsed }: SidebarProps)
         );
       })}
 
-      <div className="mt-auto">
+      <div className="mt-auto flex flex-col gap-1">
         <div className="flex items-center gap-2.5 p-2.5 rounded-[12px] bg-bg-elev border border-border">
-          <div className="w-8 h-8 rounded-full bg-brand-soft flex items-center justify-center text-brand-ink text-xs font-semibold">U</div>
-          <div className="flex flex-col leading-tight">
-            <span className="text-sm font-semibold text-text">Account</span>
-            <span className="text-xs text-text-muted">{groupSlug}</span>
+          <div className="w-8 h-8 rounded-full bg-brand-soft flex items-center justify-center text-brand-ink text-xs font-semibold shrink-0">{initials}</div>
+          <div className="flex flex-col leading-tight min-w-0 flex-1">
+            <span className="text-sm font-semibold text-text truncate">{displayName}</span>
+            <span className="text-xs text-text-muted truncate">{groupSlug}</span>
           </div>
         </div>
+        <button
+          onClick={logout}
+          className="w-full text-left text-xs text-text-dim hover:text-danger px-2.5 py-1.5 rounded-[8px] hover:bg-danger/8 transition-colors"
+        >
+          Sign out
+        </button>
       </div>
     </aside>
   );
