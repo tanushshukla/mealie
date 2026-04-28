@@ -93,6 +93,39 @@ export interface PaginationData<T> {
   items: T[];
 }
 
+export type PlanEntryType = "breakfast" | "lunch" | "dinner" | "side" | "snack" | "drink" | "dessert";
+
+export interface PlanEntry {
+  id: string;
+  date: string;
+  entryType: PlanEntryType;
+  title?: string | null;
+  text?: string | null;
+  recipeId?: string | null;
+  groupId?: string | null;
+  householdId?: string | null;
+  recipe?: RecipeSummary | null;
+}
+
+export interface ShoppingListItem {
+  id: string;
+  shoppingListId: string;
+  checked: boolean;
+  position: number;
+  display?: string | null;
+  note?: string | null;
+  quantity?: number | null;
+  food?: { name: string } | null;
+  unit?: { name: string; abbreviation?: string } | null;
+  label?: { name: string; color?: string } | null;
+}
+
+export interface ShoppingList {
+  id: string;
+  name: string;
+  listItems: ShoppingListItem[];
+}
+
 export interface RecipeListParams {
   search?: string;
   tags?: string[];

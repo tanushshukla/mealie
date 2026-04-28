@@ -5,13 +5,25 @@ const TABS = [
     label: "Recipes",
     href: (s: string) => `/g/${s}`,
     icon: "📖",
-    matchFn: (path: string, s: string) => path === `/g/${s}`,
+    matchFn: (path: string, s: string) => path === `/g/${s}` || path.startsWith(`/g/${s}/r/`),
   },
   {
     label: "Finder",
     href: (s: string) => `/g/${s}/recipes/finder`,
     icon: "✨",
     matchFn: (path: string, s: string) => path.startsWith(`/g/${s}/recipes/finder`),
+  },
+  {
+    label: "Planner",
+    href: (s: string) => `/g/${s}/planner`,
+    icon: "📅",
+    matchFn: (path: string, s: string) => path.startsWith(`/g/${s}/planner`),
+  },
+  {
+    label: "Shopping",
+    href: (s: string) => `/g/${s}/shopping`,
+    icon: "🛒",
+    matchFn: (path: string, s: string) => path.startsWith(`/g/${s}/shopping`),
   },
 ];
 

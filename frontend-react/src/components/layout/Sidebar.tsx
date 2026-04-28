@@ -14,6 +14,8 @@ export function Sidebar({ groupSlug, onClose, mobile, collapsed }: SidebarProps)
   const navMain = [
     { id: "recipes", label: "Recipes", href: `/g/${groupSlug}`, icon: "📖" },
     { id: "finder", label: "Recipe Finder", href: `/g/${groupSlug}/recipes/finder`, icon: "✨" },
+    { id: "planner", label: "Meal Planner", href: `/g/${groupSlug}/planner`, icon: "📅" },
+    { id: "shopping", label: "Shopping List", href: `/g/${groupSlug}/shopping`, icon: "🛒" },
   ];
 
   if (collapsed) {
