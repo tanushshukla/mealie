@@ -8,7 +8,7 @@ describe("login", () => {
   });
 
   it("returns access_token on success", async () => {
-    vi.spyOn(global, "fetch").mockResolvedValue(
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify({ access_token: "tok", token_type: "bearer" }), {
         status: 200,
       }),
@@ -18,14 +18,14 @@ describe("login", () => {
   });
 
   it("throws ApiError on 401", async () => {
-    vi.spyOn(global, "fetch").mockResolvedValue(
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify({ detail: "Unauthorized" }), { status: 401 }),
     );
     await expect(login("bad", "creds")).rejects.toThrow(ApiError);
   });
 
   it("sends form-encoded body", async () => {
-    const fetchSpy = vi.spyOn(global, "fetch").mockResolvedValue(
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify({ access_token: "t", token_type: "bearer" }), {
         status: 200,
       }),
@@ -39,7 +39,7 @@ describe("login", () => {
 
 describe("getMe", () => {
   it("fetches current user", async () => {
-    vi.spyOn(global, "fetch").mockResolvedValue(
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(
         JSON.stringify({ id: "1", email: "test@test.com", admin: false }),
         { status: 200 },

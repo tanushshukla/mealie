@@ -9,7 +9,7 @@ describe("apiFetch", () => {
 
   it("sends Authorization header when token is set", async () => {
     setToken("test-token");
-    const fetchSpy = vi.spyOn(global, "fetch").mockResolvedValue(
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify({ ok: true }), { status: 200 }),
     );
     await apiFetch("/api/test");
@@ -18,7 +18,7 @@ describe("apiFetch", () => {
   });
 
   it("omits Authorization header when no token", async () => {
-    const fetchSpy = vi.spyOn(global, "fetch").mockResolvedValue(
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify({}), { status: 200 }),
     );
     await apiFetch("/api/test");
@@ -27,14 +27,14 @@ describe("apiFetch", () => {
   });
 
   it("throws ApiError on non-ok response", async () => {
-    vi.spyOn(global, "fetch").mockResolvedValue(
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify({ detail: "Not found" }), { status: 404 }),
     );
     await expect(apiFetch("/api/missing")).rejects.toThrow(ApiError);
   });
 
   it("includes status code in ApiError", async () => {
-    vi.spyOn(global, "fetch").mockResolvedValue(
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify({}), { status: 401 }),
     );
     await expect(apiFetch("/api/protected")).rejects.toMatchObject({
