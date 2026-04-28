@@ -11,6 +11,7 @@
       "@api-client": ["./packages/api-client/index.ts"]
     },
     "skipLibCheck": true,
+    "noEmit": true,
     "types": ["vitest/globals"]
   },
   "include": ["src", "packages"]
