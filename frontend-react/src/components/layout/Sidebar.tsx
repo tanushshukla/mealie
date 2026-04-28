@@ -4,9 +4,10 @@ interface SidebarProps {
   groupSlug: string;
   onClose?: () => void;
   mobile?: boolean;
+  collapsed?: boolean;
 }
 
-export function Sidebar({ groupSlug, onClose, mobile }: SidebarProps) {
+export function Sidebar({ groupSlug, onClose, mobile, collapsed }: SidebarProps) {
   const state = useRouterState();
   const path = state.location.pathname;
 
@@ -14,6 +15,34 @@ export function Sidebar({ groupSlug, onClose, mobile }: SidebarProps) {
     { id: "recipes", label: "Recipes", href: `/g/${groupSlug}`, icon: "📖" },
     { id: "finder", label: "Recipe Finder", href: `/g/${groupSlug}/recipes/finder`, icon: "✨" },
   ];
+
+  if (collapsed) {
+    return (
+      <aside className="bg-sidebar-bg border-r border-border flex flex-col items-center gap-1 py-4 h-full w-[72px]">
+        <div className="w-9 h-9 rounded-lg bg-brand-soft flex items-center justify-center text-brand text-lg mb-3">
+          🍴
+        </div>
+        {navMain.map((n) => {
+          const active =
+            path === n.href || (n.href !== `/g/${groupSlug}` && path.startsWith(n.href));
+          return (
+            <Link
+              key={n.id}
+              to={n.href as string}
+              title={n.label}
+              className={`w-10 h-10 rounded-[10px] flex items-center justify-center text-lg transition-colors ${
+                active
+                  ? "bg-bg-elev border border-border shadow-sm"
+                  : "text-sidebar-text hover:bg-black/5"
+              }`}
+            >
+              {n.icon}
+            </Link>
+          );
+        })}
+      </aside>
+    );
+  }
 
   return (
     <aside className="bg-sidebar-bg border-r border-border flex flex-col gap-1 p-4 h-full">
@@ -27,15 +56,14 @@ export function Sidebar({ groupSlug, onClose, mobile }: SidebarProps) {
         )}
       </div>
 
-      <button className="flex items-center justify-center gap-2 bg-brand text-brand-fg text-sm font-medium py-2 rounded-[999px] mx-1.5 mb-2 hover:bg-brand-ink transition-colors">
+      <button className="flex items-center justify-center gap-2 bg-brand text-brand-fg text-sm font-medium py-2 rounded-full mx-1.5 mb-2 hover:bg-brand-ink transition-colors">
         + New recipe
       </button>
 
       <div className="text-[11px] font-semibold uppercase tracking-widest text-text-dim px-2.5 mt-3 mb-1.5">Cook</div>
       {navMain.map((n) => {
         const active =
-          path === n.href ||
-          (n.href !== `/g/${groupSlug}` && path.startsWith(n.href));
+          path === n.href || (n.href !== `/g/${groupSlug}` && path.startsWith(n.href));
         return (
           <Link
             key={n.id}

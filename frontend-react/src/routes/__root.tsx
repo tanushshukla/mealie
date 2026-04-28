@@ -74,7 +74,7 @@ function AppShell() {
     >
       {!isMobile && (
         <div className="sticky top-0 h-screen overflow-y-auto">
-          <Sidebar groupSlug={groupSlug} />
+          <Sidebar groupSlug={groupSlug} collapsed={isTablet} />
         </div>
       )}
       <div className="flex flex-col min-w-0">

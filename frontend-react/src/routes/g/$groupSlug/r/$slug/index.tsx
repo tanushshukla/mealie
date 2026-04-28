@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useRecipe } from "../../../../../hooks/useRecipes";
 import { RecipeHero } from "../../../../../components/recipe/RecipeHero";
 import { IngredientsList } from "../../../../../components/recipe/IngredientsList";
@@ -12,6 +13,7 @@ export const Route = createFileRoute("/g/$groupSlug/r/$slug/")({
 function RecipeDetailPage() {
   const { groupSlug, slug } = Route.useParams();
   const { data: recipe, isLoading, isError } = useRecipe(slug);
+  const [detailTab, setDetailTab] = useState<"ingredients" | "nutrition">("ingredients");
 
   if (isLoading) {
     return (
@@ -34,6 +36,7 @@ function RecipeDetailPage() {
 
   const ingredients = recipe.recipeIngredient ?? [];
   const steps = recipe.recipeInstructions ?? [];
+  const hasNutrition = !!recipe.nutrition && Object.values(recipe.nutrition).some((v) => v != null && v !== "");
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col gap-6">
@@ -48,9 +51,38 @@ function RecipeDetailPage() {
       <RecipeHero recipe={recipe} />
 
       <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
-        <div className="flex flex-col gap-4">
-          <IngredientsList ingredients={ingredients} />
-          {recipe.nutrition && <NutritionPanel nutrition={recipe.nutrition} />}
+        <div className="bg-surface rounded-lg border border-border overflow-hidden">
+          <div className="flex border-b border-border">
+            <button
+              onClick={() => setDetailTab("ingredients")}
+              className={`flex-1 py-3 text-sm font-medium transition-colors ${
+                detailTab === "ingredients"
+                  ? "text-text border-b-2 border-brand -mb-px"
+                  : "text-text-muted hover:text-text"
+              }`}
+            >
+              Ingredients
+            </button>
+            {hasNutrition && (
+              <button
+                onClick={() => setDetailTab("nutrition")}
+                className={`flex-1 py-3 text-sm font-medium transition-colors ${
+                  detailTab === "nutrition"
+                    ? "text-text border-b-2 border-brand -mb-px"
+                    : "text-text-muted hover:text-text"
+                }`}
+              >
+                Nutrition
+              </button>
+            )}
+          </div>
+          <div className="p-5">
+            {detailTab === "ingredients" ? (
+              <IngredientsList ingredients={ingredients} bare />
+            ) : (
+              recipe.nutrition && <NutritionPanel nutrition={recipe.nutrition} bare />
+            )}
+          </div>
         </div>
 
         <StepList steps={steps} />

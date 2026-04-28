@@ -2,6 +2,7 @@ import type { RecipeIngredient } from "@api-client";
 
 interface IngredientsListProps {
   ingredients: RecipeIngredient[];
+  bare?: boolean;
 }
 
 function formatIngredient(ing: RecipeIngredient): string {
@@ -9,22 +10,14 @@ function formatIngredient(ing: RecipeIngredient): string {
   if (ing.originalText) return ing.originalText;
 
   const parts: string[] = [];
-  if (ing.quantity != null && ing.quantity !== 0) {
-    parts.push(String(ing.quantity));
-  }
-  if (ing.unit) {
-    parts.push(ing.unit.abbreviation ?? ing.unit.name);
-  }
-  if (ing.food) {
-    parts.push(ing.food.name);
-  }
-  if (ing.note) {
-    parts.push(`(${ing.note})`);
-  }
+  if (ing.quantity != null && ing.quantity !== 0) parts.push(String(ing.quantity));
+  if (ing.unit) parts.push(ing.unit.abbreviation ?? ing.unit.name);
+  if (ing.food) parts.push(ing.food.name);
+  if (ing.note) parts.push(`(${ing.note})`);
   return parts.join(" ") || "—";
 }
 
-export function IngredientsList({ ingredients }: IngredientsListProps) {
+export function IngredientsList({ ingredients, bare }: IngredientsListProps) {
   if (ingredients.length === 0) return null;
 
   const sections: { title?: string; items: RecipeIngredient[] }[] = [];
@@ -40,9 +33,8 @@ export function IngredientsList({ ingredients }: IngredientsListProps) {
   }
   if (current.items.length > 0 || current.title) sections.push(current);
 
-  return (
-    <div className="bg-surface rounded-lg border border-border p-5 flex flex-col gap-5">
-      <h2 className="font-serif text-xl text-text">Ingredients</h2>
+  const body = (
+    <div className="flex flex-col gap-5">
       {sections.map((section, si) => (
         <div key={si} className="flex flex-col gap-2">
           {section.title && (
@@ -60,6 +52,15 @@ export function IngredientsList({ ingredients }: IngredientsListProps) {
           </ul>
         </div>
       ))}
+    </div>
+  );
+
+  if (bare) return body;
+
+  return (
+    <div className="bg-surface rounded-lg border border-border p-5 flex flex-col gap-5">
+      <h2 className="font-serif text-xl text-text">Ingredients</h2>
+      {body}
     </div>
   );
 }

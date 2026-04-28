@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import { z } from "zod/v4";
-import { useRecipes } from "../../../hooks/useRecipes";
+import { useInfiniteRecipes } from "../../../hooks/useRecipes";
 import { RecipeCard } from "../../../components/recipe/RecipeCard";
 import { RecipeGrid } from "../../../components/recipe/RecipeGrid";
 import { FilterBar } from "../../../components/recipe/FilterBar";
@@ -9,8 +9,7 @@ import type { RecipeSummary } from "@api-client";
 
 const searchSchema = z.object({
   q: z.string().optional(),
-  tags: z.array(z.string()).optional(),
-  page: z.number().optional(),
+  tag: z.string().optional(),
 });
 
 export const Route = createFileRoute("/g/$groupSlug/")({
@@ -22,25 +21,41 @@ function RecipeSearchPage() {
   const { groupSlug } = Route.useParams();
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
-  const [activeTag, setActiveTag] = useState(search.tags?.[0] ?? "All");
   const [maxTime, setMaxTime] = useState(120);
   const [view, setView] = useState<"grid" | "list">("grid");
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  const activeTag = search.tag ?? "All";
 
   const params = {
     search: search.q,
     tags: activeTag !== "All" ? [activeTag] : undefined,
   };
 
-  const { data, isLoading } = useRecipes(params);
+  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
+    useInfiniteRecipes(params);
+
+  const allItems = data?.pages.flatMap((p) => p.items) ?? [];
+  const total = data?.pages[0]?.total ?? 0;
 
   const handleOpen = (recipe: RecipeSummary) => {
     navigate({ to: `/g/${groupSlug}/r/${recipe.slug ?? ""}` });
   };
 
-  const handleTagChange = (tag: string) => {
-    setActiveTag(tag);
-    navigate({ search: (prev) => ({ ...prev, tags: tag !== "All" ? [tag] : undefined }) });
+  const handleTagChange = (slug: string) => {
+    navigate({ search: (prev) => ({ ...prev, tag: slug !== "All" ? slug : undefined }) });
   };
+
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry?.isIntersecting && hasNextPage && !isFetchingNextPage) fetchNextPage(); },
+      { rootMargin: "200px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
     <div className="px-8 py-7 max-w-[1320px] mx-auto">
@@ -51,7 +66,7 @@ function RecipeSearchPage() {
             A small library of <em className="italic font-normal text-brand">good things</em>.
           </h1>
         </div>
-        <button className="flex items-center gap-2 bg-brand text-brand-fg text-sm font-medium px-4 py-2.5 rounded-[999px] hover:bg-brand-ink transition-colors">
+        <button className="flex items-center gap-2 bg-brand text-brand-fg text-sm font-medium px-4 py-2.5 rounded-full hover:bg-brand-ink transition-colors shrink-0">
           + Add recipe
         </button>
       </div>
@@ -66,7 +81,7 @@ function RecipeSearchPage() {
       />
 
       <div className="text-[13px] text-text-muted mb-4">
-        <strong className="text-text">{data?.total ?? 0}</strong> recipes · sorted by recently added
+        <strong className="text-text">{total}</strong> recipes · sorted by recently added
       </div>
 
       {isLoading ? (
@@ -77,15 +92,21 @@ function RecipeSearchPage() {
         </div>
       ) : view === "grid" ? (
         <RecipeGrid>
-          {data?.items.map((r) => <RecipeCard key={r.id ?? r.slug} recipe={r} onOpen={handleOpen} />)}
+          {allItems.map((r) => <RecipeCard key={r.id ?? r.slug} recipe={r} onOpen={handleOpen} />)}
         </RecipeGrid>
       ) : (
         <div className="flex flex-col gap-2.5">
-          {data?.items.map((r) => (
+          {allItems.map((r) => (
             <RecipeCard key={r.id ?? r.slug} recipe={r} onOpen={handleOpen} layout="row" />
           ))}
         </div>
       )}
+
+      <div ref={loadMoreRef} className="h-10 flex items-center justify-center mt-4">
+        {isFetchingNextPage && (
+          <div className="text-sm text-text-muted">Loading more…</div>
+        )}
+      </div>
     </div>
   );
 }
