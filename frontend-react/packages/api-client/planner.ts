@@ -31,6 +31,13 @@ export async function listShoppingLists(): Promise<{ id: string; name: string }[
   return res.items;
 }
 
+export async function createShoppingList(name: string): Promise<{ id: string; name: string }> {
+  return apiFetch("/api/households/shopping/lists", {
+    method: "POST",
+    body: JSON.stringify({ name }),
+  });
+}
+
 export async function getShoppingList(id: string): Promise<import("./types").ShoppingList> {
   return apiFetch(`/api/households/shopping/lists/${id}`);
 }

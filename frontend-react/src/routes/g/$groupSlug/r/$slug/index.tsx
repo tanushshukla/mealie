@@ -5,6 +5,7 @@ import {
   useAddToMealPlan,
   useAddRecipeToShoppingList,
   useShoppingLists,
+  useCreateShoppingList,
 } from "../../../../../hooks/usePlanner";
 import { RecipeHero } from "../../../../../components/recipe/RecipeHero";
 import { IngredientsList } from "../../../../../components/recipe/IngredientsList";
@@ -106,6 +107,17 @@ function AddToPlanModal({
   );
 }
 
+function thisWeekLabel(): string {
+  const d = new Date();
+  const mon = new Date(d);
+  mon.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  mon.setHours(0, 0, 0, 0);
+  const sun = new Date(mon);
+  sun.setDate(mon.getDate() + 6);
+  const fmt = (dt: Date) => dt.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  return `${fmt(mon)} – ${fmt(sun)}`;
+}
+
 function AddToShoppingModal({
   recipeId,
   onClose,
@@ -113,15 +125,30 @@ function AddToShoppingModal({
   recipeId: string;
   onClose: () => void;
 }) {
-  const { data: lists, isLoading } = useShoppingLists();
+  const { data: lists = [], isLoading } = useShoppingLists();
   const addToList = useAddRecipeToShoppingList();
-  const [done, setDone] = useState(false);
+  const createList = useCreateShoppingList();
+
+  const weekLabel = thisWeekLabel();
+  const weekNameTaken = lists.some((l) => l.name === weekLabel);
+  const [newName, setNewName] = useState(() => weekNameTaken ? "" : weekLabel);
+  const [showNewForm, setShowNewForm] = useState(lists.length === 0);
 
   async function handleAdd(listId: string) {
     await addToList.mutateAsync({ listId, recipeId });
-    setDone(true);
-    setTimeout(onClose, 800);
+    onClose();
   }
+
+  async function handleCreateAndAdd(e: React.FormEvent) {
+    e.preventDefault();
+    const name = newName.trim();
+    if (!name) return;
+    const list = await createList.mutateAsync(name);
+    await addToList.mutateAsync({ listId: list.id, recipeId });
+    onClose();
+  }
+
+  const isBusy = addToList.isPending || createList.isPending;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
@@ -134,30 +161,69 @@ function AddToShoppingModal({
           <button type="button" onClick={onClose} className="w-8 h-8 flex items-center justify-center text-text-muted hover:text-text rounded-lg">✕</button>
         </div>
 
-        {done ? (
-          <p className="text-sm text-brand text-center py-4">Added to list!</p>
-        ) : isLoading ? (
+        {isLoading ? (
           <p className="text-sm text-text-muted text-center py-4">Loading lists…</p>
-        ) : !lists || lists.length === 0 ? (
-          <p className="text-sm text-text-muted text-center py-4">No shopping lists found.</p>
         ) : (
-          <ul className="flex flex-col gap-1.5">
-            {lists.map((list) => (
-              <li key={list.id}>
-                <button
-                  onClick={() => handleAdd(list.id)}
-                  disabled={addToList.isPending}
-                  className="w-full text-left px-4 py-3 rounded-lg border border-border bg-bg-elev hover:border-brand hover:bg-brand-soft text-sm font-medium text-text transition-colors disabled:opacity-50"
-                >
-                  {list.name}
-                </button>
-              </li>
-            ))}
-          </ul>
+          <>
+            {lists.length > 0 && (
+              <ul className="flex flex-col gap-1.5">
+                {lists.map((list) => (
+                  <li key={list.id}>
+                    <button
+                      onClick={() => handleAdd(list.id)}
+                      disabled={isBusy}
+                      className="w-full text-left px-4 py-3 rounded-lg border border-border bg-bg-elev hover:border-brand hover:bg-brand-soft text-sm font-medium text-text transition-colors disabled:opacity-50"
+                    >
+                      {list.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {/* New list section */}
+            {showNewForm ? (
+              <form onSubmit={handleCreateAndAdd} className="flex flex-col gap-2">
+                <input
+                  autoFocus
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  placeholder="List name…"
+                  className="w-full px-3 py-2.5 rounded-lg border border-border bg-bg text-text text-sm placeholder:text-text-dim focus:outline-none focus:ring-2 focus:ring-brand/25 focus:border-brand transition-colors"
+                />
+                <div className="flex gap-2">
+                  {lists.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowNewForm(false)}
+                      className="flex-1 py-2 rounded-full border border-border text-sm font-medium hover:bg-bg-elev transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={isBusy || !newName.trim()}
+                    className="flex-1 py-2 rounded-full bg-brand text-brand-fg text-sm font-medium hover:bg-brand-ink transition-colors disabled:opacity-50"
+                  >
+                    {isBusy ? "Creating…" : "Create & add"}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <button
+                onClick={() => setShowNewForm(true)}
+                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg border border-dashed border-border text-sm text-text-muted hover:border-brand hover:text-brand transition-colors"
+              >
+                <span className="text-base leading-none">+</span>
+                New list
+              </button>
+            )}
+          </>
         )}
 
-        {addToList.isError && (
-          <p className="text-xs text-danger text-center">Failed to add ingredients. Please try again.</p>
+        {(addToList.isError || createList.isError) && (
+          <p className="text-xs text-danger text-center">Something went wrong. Please try again.</p>
         )}
       </div>
     </div>

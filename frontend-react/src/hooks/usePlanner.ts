@@ -11,6 +11,7 @@ import {
   createShoppingItem,
   deleteShoppingItem,
   deleteShoppingItems,
+  createShoppingList,
 } from "@api-client";
 import type { PlanEntryType } from "@api-client";
 
@@ -122,5 +123,26 @@ export function useClearCheckedItems(listId: string) {
       toast.success("Cleared checked items");
     },
     onError: () => toast.error("Failed to clear items"),
+  });
+}
+
+export function useClearAllItems(listId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: string[]) => deleteShoppingItems(ids),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: plannerKeys.shoppingList(listId) });
+      toast.success("List cleared");
+    },
+    onError: () => toast.error("Failed to clear list"),
+  });
+}
+
+export function useCreateShoppingList() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (name: string) => createShoppingList(name),
+    onSuccess: () => qc.invalidateQueries({ queryKey: plannerKeys.shoppingLists }),
+    onError: () => toast.error("Failed to create list"),
   });
 }

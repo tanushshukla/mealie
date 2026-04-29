@@ -7,6 +7,7 @@ import {
   useCreateShoppingItem,
   useDeleteShoppingItem,
   useClearCheckedItems,
+  useClearAllItems,
 } from "../../../../hooks/usePlanner";
 
 export const Route = createFileRoute("/g/$groupSlug/shopping/")({
@@ -21,6 +22,39 @@ function formatItem(item: import("@api-client").ShoppingListItem): string {
   if (item.food) parts.push(item.food.name);
   if (item.note) parts.push(item.note);
   return parts.join(" ") || "Item";
+}
+
+function ClearAllConfirm({
+  itemCount,
+  onConfirm,
+  onCancel,
+  isPending,
+}: {
+  itemCount: number;
+  onConfirm: () => void;
+  onCancel: () => void;
+  isPending: boolean;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={onCancel}>
+      <div className="bg-surface rounded-xl border border-border shadow-xl w-full max-w-sm p-6 flex flex-col gap-5" onClick={(e) => e.stopPropagation()}>
+        <div>
+          <h2 className="font-serif text-xl text-text mb-1">Clear all items?</h2>
+          <p className="text-sm text-text-muted">
+            All <strong className="text-text">{itemCount}</strong> items will be permanently removed. This cannot be undone.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={onCancel} className="flex-1 py-2.5 rounded-full border border-border text-sm font-medium hover:bg-bg-elev transition-colors">
+            Cancel
+          </button>
+          <button onClick={onConfirm} disabled={isPending} className="flex-1 py-2.5 rounded-full bg-danger text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
+            {isPending ? "Clearing…" : "Clear all"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function AddItemForm({ listId }: { listId: string }) {
@@ -70,6 +104,8 @@ function ShoppingPage() {
   const toggle = useToggleShoppingItem(resolvedId);
   const remove = useDeleteShoppingItem(resolvedId);
   const clearChecked = useClearCheckedItems(resolvedId);
+  const clearAll = useClearAllItems(resolvedId);
+  const [clearAllOpen, setClearAllOpen] = useState(false);
 
   const items = list?.listItems ?? [];
   const checked = items.filter((i) => i.checked);
@@ -107,15 +143,25 @@ function ShoppingPage() {
             {unchecked.length === 1 ? "item" : "items"} to grab
           </h1>
         </div>
-        {checkedCount > 0 && (
-          <button
-            onClick={() => clearChecked.mutate(checked.map((i) => i.id))}
-            disabled={clearChecked.isPending}
-            className="text-sm text-text-muted hover:text-danger transition-colors disabled:opacity-40"
-          >
-            {clearChecked.isPending ? "Clearing…" : `Clear ${checkedCount} checked`}
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {checkedCount > 0 && (
+            <button
+              onClick={() => clearChecked.mutate(checked.map((i) => i.id))}
+              disabled={clearChecked.isPending}
+              className="text-sm text-text-muted hover:text-brand transition-colors disabled:opacity-40"
+            >
+              {clearChecked.isPending ? "Clearing…" : `Clear ${checkedCount} checked`}
+            </button>
+          )}
+          {items.length > 0 && (
+            <button
+              onClick={() => setClearAllOpen(true)}
+              className="text-sm text-text-muted hover:text-danger transition-colors"
+            >
+              Clear all
+            </button>
+          )}
+        </div>
       </div>
 
       {/* List tabs (if multiple lists) */}
@@ -207,6 +253,17 @@ function ShoppingPage() {
           </>
         )}
       </div>
+
+      {clearAllOpen && (
+        <ClearAllConfirm
+          itemCount={items.length}
+          onConfirm={() => {
+            clearAll.mutate(items.map((i) => i.id), { onSuccess: () => setClearAllOpen(false) });
+          }}
+          onCancel={() => setClearAllOpen(false)}
+          isPending={clearAll.isPending}
+        />
+      )}
     </div>
   );
 }
