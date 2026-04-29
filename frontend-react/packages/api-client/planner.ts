@@ -48,3 +48,19 @@ export async function updateShoppingItem(
 export async function addRecipeToShoppingList(listId: string, recipeId: string): Promise<void> {
   return apiFetch(`/api/households/shopping/lists/${listId}/recipe/${recipeId}`, { method: "POST" });
 }
+
+export async function createShoppingItem(listId: string, note: string): Promise<void> {
+  return apiFetch("/api/households/shopping/items", {
+    method: "POST",
+    body: JSON.stringify({ shoppingListId: listId, note, checked: false }),
+  });
+}
+
+export async function deleteShoppingItem(id: string): Promise<void> {
+  return apiFetch(`/api/households/shopping/items/${id}`, { method: "DELETE" });
+}
+
+export async function deleteShoppingItems(ids: string[]): Promise<void> {
+  const qs = ids.map((id) => `ids=${encodeURIComponent(id)}`).join("&");
+  return apiFetch(`/api/households/shopping/items?${qs}`, { method: "DELETE" });
+}

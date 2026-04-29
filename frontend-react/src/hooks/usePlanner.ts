@@ -8,6 +8,9 @@ import {
   getShoppingList,
   updateShoppingItem,
   addRecipeToShoppingList,
+  createShoppingItem,
+  deleteShoppingItem,
+  deleteShoppingItems,
 } from "@api-client";
 import type { PlanEntryType } from "@api-client";
 
@@ -89,5 +92,35 @@ export function useAddRecipeToShoppingList() {
       toast.success("Added to shopping list");
     },
     onError: () => toast.error("Failed to add to shopping list"),
+  });
+}
+
+export function useCreateShoppingItem(listId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (note: string) => createShoppingItem(listId, note),
+    onSuccess: () => qc.invalidateQueries({ queryKey: plannerKeys.shoppingList(listId) }),
+    onError: () => toast.error("Failed to add item"),
+  });
+}
+
+export function useDeleteShoppingItem(listId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteShoppingItem(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: plannerKeys.shoppingList(listId) }),
+    onError: () => toast.error("Failed to remove item"),
+  });
+}
+
+export function useClearCheckedItems(listId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: string[]) => deleteShoppingItems(ids),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: plannerKeys.shoppingList(listId) });
+      toast.success("Cleared checked items");
+    },
+    onError: () => toast.error("Failed to clear items"),
   });
 }
