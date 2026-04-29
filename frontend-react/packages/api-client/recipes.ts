@@ -37,3 +37,14 @@ export async function createRecipeFromName(name: string): Promise<string> {
     body: JSON.stringify({ name }),
   });
 }
+
+export async function updateRecipe(slug: string, data: Partial<import("./types").Recipe>): Promise<import("./types").Recipe> {
+  return apiFetch<import("./types").Recipe>(`/api/recipes/${slug}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteRecipe(slug: string): Promise<void> {
+  return apiFetch<void>(`/api/recipes/${slug}`, { method: "DELETE" });
+}

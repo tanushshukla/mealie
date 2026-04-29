@@ -17,6 +17,7 @@ import { Route as GGroupSlugPlannerIndexRouteImport } from './routes/g/$groupSlu
 import { Route as GGroupSlugHomeIndexRouteImport } from './routes/g/$groupSlug/home/index'
 import { Route as GGroupSlugRecipesFinderIndexRouteImport } from './routes/g/$groupSlug/recipes/finder/index'
 import { Route as GGroupSlugRSlugIndexRouteImport } from './routes/g/$groupSlug/r/$slug/index'
+import { Route as GGroupSlugRSlugEditRouteImport } from './routes/g/$groupSlug/r/$slug/edit'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -59,6 +60,11 @@ const GGroupSlugRSlugIndexRoute = GGroupSlugRSlugIndexRouteImport.update({
   path: '/g/$groupSlug/r/$slug/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GGroupSlugRSlugEditRoute = GGroupSlugRSlugEditRouteImport.update({
+  id: '/g/$groupSlug/r/$slug/edit',
+  path: '/g/$groupSlug/r/$slug/edit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
@@ -67,6 +73,7 @@ export interface FileRoutesByFullPath {
   '/g/$groupSlug/home/': typeof GGroupSlugHomeIndexRoute
   '/g/$groupSlug/planner/': typeof GGroupSlugPlannerIndexRoute
   '/g/$groupSlug/shopping/': typeof GGroupSlugShoppingIndexRoute
+  '/g/$groupSlug/r/$slug/edit': typeof GGroupSlugRSlugEditRoute
   '/g/$groupSlug/r/$slug/': typeof GGroupSlugRSlugIndexRoute
   '/g/$groupSlug/recipes/finder/': typeof GGroupSlugRecipesFinderIndexRoute
 }
@@ -77,6 +84,7 @@ export interface FileRoutesByTo {
   '/g/$groupSlug/home': typeof GGroupSlugHomeIndexRoute
   '/g/$groupSlug/planner': typeof GGroupSlugPlannerIndexRoute
   '/g/$groupSlug/shopping': typeof GGroupSlugShoppingIndexRoute
+  '/g/$groupSlug/r/$slug/edit': typeof GGroupSlugRSlugEditRoute
   '/g/$groupSlug/r/$slug': typeof GGroupSlugRSlugIndexRoute
   '/g/$groupSlug/recipes/finder': typeof GGroupSlugRecipesFinderIndexRoute
 }
@@ -88,6 +96,7 @@ export interface FileRoutesById {
   '/g/$groupSlug/home/': typeof GGroupSlugHomeIndexRoute
   '/g/$groupSlug/planner/': typeof GGroupSlugPlannerIndexRoute
   '/g/$groupSlug/shopping/': typeof GGroupSlugShoppingIndexRoute
+  '/g/$groupSlug/r/$slug/edit': typeof GGroupSlugRSlugEditRoute
   '/g/$groupSlug/r/$slug/': typeof GGroupSlugRSlugIndexRoute
   '/g/$groupSlug/recipes/finder/': typeof GGroupSlugRecipesFinderIndexRoute
 }
@@ -100,6 +109,7 @@ export interface FileRouteTypes {
     | '/g/$groupSlug/home/'
     | '/g/$groupSlug/planner/'
     | '/g/$groupSlug/shopping/'
+    | '/g/$groupSlug/r/$slug/edit'
     | '/g/$groupSlug/r/$slug/'
     | '/g/$groupSlug/recipes/finder/'
   fileRoutesByTo: FileRoutesByTo
@@ -110,6 +120,7 @@ export interface FileRouteTypes {
     | '/g/$groupSlug/home'
     | '/g/$groupSlug/planner'
     | '/g/$groupSlug/shopping'
+    | '/g/$groupSlug/r/$slug/edit'
     | '/g/$groupSlug/r/$slug'
     | '/g/$groupSlug/recipes/finder'
   id:
@@ -120,6 +131,7 @@ export interface FileRouteTypes {
     | '/g/$groupSlug/home/'
     | '/g/$groupSlug/planner/'
     | '/g/$groupSlug/shopping/'
+    | '/g/$groupSlug/r/$slug/edit'
     | '/g/$groupSlug/r/$slug/'
     | '/g/$groupSlug/recipes/finder/'
   fileRoutesById: FileRoutesById
@@ -131,6 +143,7 @@ export interface RootRouteChildren {
   GGroupSlugHomeIndexRoute: typeof GGroupSlugHomeIndexRoute
   GGroupSlugPlannerIndexRoute: typeof GGroupSlugPlannerIndexRoute
   GGroupSlugShoppingIndexRoute: typeof GGroupSlugShoppingIndexRoute
+  GGroupSlugRSlugEditRoute: typeof GGroupSlugRSlugEditRoute
   GGroupSlugRSlugIndexRoute: typeof GGroupSlugRSlugIndexRoute
   GGroupSlugRecipesFinderIndexRoute: typeof GGroupSlugRecipesFinderIndexRoute
 }
@@ -193,6 +206,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GGroupSlugRSlugIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/g/$groupSlug/r/$slug/edit': {
+      id: '/g/$groupSlug/r/$slug/edit'
+      path: '/g/$groupSlug/r/$slug/edit'
+      fullPath: '/g/$groupSlug/r/$slug/edit'
+      preLoaderRoute: typeof GGroupSlugRSlugEditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -203,6 +223,7 @@ const rootRouteChildren: RootRouteChildren = {
   GGroupSlugHomeIndexRoute: GGroupSlugHomeIndexRoute,
   GGroupSlugPlannerIndexRoute: GGroupSlugPlannerIndexRoute,
   GGroupSlugShoppingIndexRoute: GGroupSlugShoppingIndexRoute,
+  GGroupSlugRSlugEditRoute: GGroupSlugRSlugEditRoute,
   GGroupSlugRSlugIndexRoute: GGroupSlugRSlugIndexRoute,
   GGroupSlugRecipesFinderIndexRoute: GGroupSlugRecipesFinderIndexRoute,
 }

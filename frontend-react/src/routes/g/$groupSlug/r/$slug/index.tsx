@@ -204,6 +204,14 @@ function RecipeContent({ recipe, groupSlug }: { recipe: Recipe; groupSlug: strin
             <span>🛒</span>
             <span>Add to shopping list</span>
           </button>
+          <Link
+            to="/g/$groupSlug/r/$slug/edit"
+            params={{ groupSlug, slug: recipe.slug ?? "" }}
+            className="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-bg-elev text-sm font-medium text-text hover:border-brand hover:bg-brand-soft hover:text-brand-ink transition-colors"
+          >
+            <span>✏️</span>
+            <span>Edit</span>
+          </Link>
         </div>
       )}
 

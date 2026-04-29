@@ -1,5 +1,6 @@
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { listRecipes, getRecipe, createRecipeFromUrl, createRecipeFromName } from "@api-client";
+import { listRecipes, getRecipe, createRecipeFromUrl, createRecipeFromName, updateRecipe, deleteRecipe } from "@api-client";
+import type { Recipe } from "@api-client";
 import type { RecipeListParams } from "@api-client";
 
 export const recipeKeys = {
@@ -46,6 +47,25 @@ export function useCreateRecipeFromName() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (name: string) => createRecipeFromName(name),
+    onSuccess: () => qc.invalidateQueries({ queryKey: recipeKeys.all }),
+  });
+}
+
+export function useUpdateRecipe(slug: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Partial<Recipe>) => updateRecipe(slug, data),
+    onSuccess: (updated) => {
+      qc.setQueryData(recipeKeys.detail(updated.slug ?? slug), updated);
+      qc.invalidateQueries({ queryKey: recipeKeys.all });
+    },
+  });
+}
+
+export function useDeleteRecipe() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (slug: string) => deleteRecipe(slug),
     onSuccess: () => qc.invalidateQueries({ queryKey: recipeKeys.all }),
   });
 }
