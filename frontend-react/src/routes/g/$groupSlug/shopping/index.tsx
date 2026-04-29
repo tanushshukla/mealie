@@ -199,19 +199,12 @@ function ItemRow({
 }) {
   const navigate = useNavigate();
   const [popoverOpen, setPopoverOpen] = useState(false);
-  const arrowRef = useRef<HTMLButtonElement>(null);
+  const starRef = useRef<HTMLButtonElement>(null);
 
   const refs = item.recipeReferences ?? [];
   const linkedRecipes = refs.map((r) => recipeMap.get(r.recipeId)).filter(Boolean) as ShoppingListRecipeRef[];
   const recipeSub = recipeNamesForItem(item, recipeMap);
-
-  function handleArrow() {
-    if (linkedRecipes.length === 1) {
-      navigate({ to: "/g/$groupSlug/r/$slug", params: { groupSlug, slug: linkedRecipes[0]!.recipe.slug ?? "" } });
-    } else {
-      setPopoverOpen((o) => !o);
-    }
-  }
+  const singleRecipe = linkedRecipes.length === 1 ? linkedRecipes[0] : null;
 
   return (
     <div className="flex items-center gap-3 px-4 py-3 border-b border-border last:border-0 hover:bg-bg-sunken/50 group transition-colors relative">
@@ -244,26 +237,43 @@ function ItemRow({
         >
           ✕
         </button>
+
+        {/* ✳ "Used in" popover button — shown for any recipe-linked item */}
         {linkedRecipes.length > 0 && (
           <button
-            ref={arrowRef}
-            onClick={handleArrow}
+            ref={starRef}
+            onClick={() => setPopoverOpen((o) => !o)}
+            className={`w-7 h-7 rounded-full flex items-center justify-center text-sm transition-colors ${
+              popoverOpen
+                ? "bg-brand text-brand-fg ring-2 ring-brand/30"
+                : "text-text-muted hover:bg-bg-elev hover:text-brand"
+            }`}
+            title="View recipes that use this"
+          >
+            ✳
+          </button>
+        )}
+
+        {/* › direct-nav button — shown only for single-recipe items */}
+        {singleRecipe && (
+          <button
+            onClick={() => navigate({ to: "/g/$groupSlug/r/$slug", params: { groupSlug, slug: singleRecipe.recipe.slug ?? "" } })}
             className="w-7 h-7 rounded-full flex items-center justify-center text-text-muted hover:bg-bg-elev hover:text-brand transition-colors text-sm"
-            title={linkedRecipes.length === 1 ? `Go to ${linkedRecipes[0]!.recipe.name}` : "View recipes"}
+            title={`Go to ${singleRecipe.recipe.name}`}
           >
             ›
           </button>
         )}
       </div>
 
-      {/* Multi-recipe popover */}
-      {popoverOpen && linkedRecipes.length > 1 && (
+      {/* "Used in" popover */}
+      {popoverOpen && (
         <RecipePopover
           refs={refs}
           recipeMap={recipeMap}
           groupSlug={groupSlug}
           onClose={() => setPopoverOpen(false)}
-          anchorRef={arrowRef}
+          anchorRef={starRef}
         />
       )}
     </div>
