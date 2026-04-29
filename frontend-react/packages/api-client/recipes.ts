@@ -23,3 +23,17 @@ export async function listRecipes(
 export async function getRecipe(slug: string): Promise<Recipe> {
   return apiFetch<Recipe>(`/api/recipes/${slug}`);
 }
+
+export async function createRecipeFromUrl(url: string): Promise<string> {
+  return apiFetch<string>("/api/recipes/create-url", {
+    method: "POST",
+    body: JSON.stringify({ url, includeTags: true }),
+  });
+}
+
+export async function createRecipeFromName(name: string): Promise<string> {
+  return apiFetch<string>("/api/recipes", {
+    method: "POST",
+    body: JSON.stringify({ name }),
+  });
+}

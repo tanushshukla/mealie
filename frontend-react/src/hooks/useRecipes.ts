@@ -1,5 +1,5 @@
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
-import { listRecipes, getRecipe } from "@api-client";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { listRecipes, getRecipe, createRecipeFromUrl, createRecipeFromName } from "@api-client";
 import type { RecipeListParams } from "@api-client";
 
 export const recipeKeys = {
@@ -31,5 +31,21 @@ export function useRecipe(slug: string) {
     queryKey: recipeKeys.detail(slug),
     queryFn: () => getRecipe(slug),
     enabled: !!slug,
+  });
+}
+
+export function useCreateRecipeFromUrl() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (url: string) => createRecipeFromUrl(url),
+    onSuccess: () => qc.invalidateQueries({ queryKey: recipeKeys.all }),
+  });
+}
+
+export function useCreateRecipeFromName() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (name: string) => createRecipeFromName(name),
+    onSuccess: () => qc.invalidateQueries({ queryKey: recipeKeys.all }),
   });
 }
