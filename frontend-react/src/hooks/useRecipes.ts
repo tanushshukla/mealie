@@ -1,5 +1,5 @@
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { listRecipes, getRecipe, createRecipeFromUrl, createRecipeFromName, updateRecipe, deleteRecipe, updateRecipeImage } from "@api-client";
+import { listRecipes, getRecipe, createRecipeFromUrl, createRecipeFromName, updateRecipe, deleteRecipe, updateRecipeImage, patchRecipe, markLastMade, getComments, createComment, deleteComment } from "@api-client";
 import type { Recipe } from "@api-client";
 import type { RecipeListParams } from "@api-client";
 import { toast } from "../lib/toast";
@@ -82,6 +82,60 @@ export function useDeleteRecipe() {
       toast.success("Recipe deleted");
     },
     onError: () => toast.error("Failed to delete recipe"),
+  });
+}
+
+export function useRateRecipe(slug: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (rating: number) => patchRecipe(slug, { rating }),
+    onSuccess: (updated) => {
+      qc.setQueryData(recipeKeys.detail(slug), updated);
+      qc.invalidateQueries({ queryKey: recipeKeys.all });
+    },
+    onError: () => toast.error("Failed to save rating"),
+  });
+}
+
+export function useMarkLastMade(slug: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => markLastMade(slug, new Date().toISOString()),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: recipeKeys.detail(slug) });
+      toast.success("Marked as made today");
+    },
+    onError: () => toast.error("Failed to update"),
+  });
+}
+
+export const commentKeys = {
+  list: (slug: string) => ["comments", slug] as const,
+};
+
+export function useComments(slug: string) {
+  return useQuery({
+    queryKey: commentKeys.list(slug),
+    queryFn: () => getComments(slug),
+    enabled: !!slug,
+  });
+}
+
+export function useCreateComment(slug: string, recipeId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (text: string) => createComment(recipeId, text),
+    onSuccess: () => qc.invalidateQueries({ queryKey: commentKeys.list(slug) }),
+    onError: () => toast.error("Failed to post comment"),
+  });
+}
+
+export function useDeleteComment(slug: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteComment(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: commentKeys.list(slug) }),
+    onError: () => toast.error("Failed to delete comment"),
   });
 }
 

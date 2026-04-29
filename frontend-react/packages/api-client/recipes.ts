@@ -49,6 +49,35 @@ export async function deleteRecipe(slug: string): Promise<void> {
   return apiFetch<void>(`/api/recipes/${slug}`, { method: "DELETE" });
 }
 
+export async function patchRecipe(slug: string, data: Partial<import("./types").Recipe>): Promise<import("./types").Recipe> {
+  return apiFetch<import("./types").Recipe>(`/api/recipes/${slug}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function markLastMade(slug: string, timestamp: string): Promise<void> {
+  return apiFetch<void>(`/api/recipes/${slug}/last-made`, {
+    method: "PATCH",
+    body: JSON.stringify({ timestamp }),
+  });
+}
+
+export async function getComments(slug: string): Promise<import("./types").RecipeComment[]> {
+  return apiFetch<import("./types").RecipeComment[]>(`/api/recipes/${slug}/comments`);
+}
+
+export async function createComment(recipeId: string, text: string): Promise<import("./types").RecipeComment> {
+  return apiFetch<import("./types").RecipeComment>("/api/comments", {
+    method: "POST",
+    body: JSON.stringify({ recipeId, text }),
+  });
+}
+
+export async function deleteComment(id: string): Promise<void> {
+  return apiFetch<void>(`/api/comments/${id}`, { method: "DELETE" });
+}
+
 export async function updateRecipeImage(slug: string, file: File): Promise<{ image: string }> {
   const ext = file.name.split(".").pop() ?? "jpg";
   const form = new FormData();

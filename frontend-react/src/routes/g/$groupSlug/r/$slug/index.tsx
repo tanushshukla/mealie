@@ -1,12 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { useRecipe } from "../../../../../hooks/useRecipes";
+import { useState, useRef } from "react";
+import {
+  useRecipe,
+  useRateRecipe,
+  useMarkLastMade,
+  useComments,
+  useCreateComment,
+  useDeleteComment,
+} from "../../../../../hooks/useRecipes";
 import {
   useAddToMealPlan,
   useAddRecipeToShoppingList,
   useShoppingLists,
   useCreateShoppingList,
 } from "../../../../../hooks/usePlanner";
+import { useMe } from "../../../../../hooks/useAuth";
 import { RecipeHero } from "../../../../../components/recipe/RecipeHero";
 import { IngredientsList } from "../../../../../components/recipe/IngredientsList";
 import { NutritionPanel } from "../../../../../components/recipe/NutritionPanel";
@@ -230,11 +238,141 @@ function AddToShoppingModal({
   );
 }
 
+// ─── Star rating ─────────────────────────────────────────────────────────────
+
+function StarRating({ slug, rating }: { slug: string; rating?: number | null }) {
+  const [hover, setHover] = useState<number | null>(null);
+  const rate = useRateRecipe(slug);
+  const display = hover ?? rating ?? 0;
+
+  return (
+    <div className="flex items-center gap-0.5" onMouseLeave={() => setHover(null)}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          key={n}
+          type="button"
+          onClick={() => rate.mutate(n)}
+          onMouseEnter={() => setHover(n)}
+          className={`text-xl leading-none transition-colors ${
+            n <= display ? "text-[#f59e0b]" : "text-border hover:text-[#f59e0b]/50"
+          }`}
+          title={`Rate ${n} star${n > 1 ? "s" : ""}`}
+        >
+          ★
+        </button>
+      ))}
+      {rating != null && (
+        <span className="ml-1.5 text-xs text-text-muted">{rating.toFixed(1)}</span>
+      )}
+    </div>
+  );
+}
+
+// ─── Notes + comments ─────────────────────────────────────────────────────────
+
+function NotesSection({ notes }: { notes: NonNullable<Recipe["notes"]> }) {
+  if (notes.length === 0) return null;
+  return (
+    <div className="flex flex-col gap-3">
+      <h3 className="font-serif text-lg text-text">Notes</h3>
+      <div className="flex flex-col gap-3">
+        {notes.map((note, i) => (
+          <div key={i} className="bg-surface rounded-xl border border-border p-4">
+            {note.title && <div className="text-sm font-semibold text-text mb-1">{note.title}</div>}
+            <p className="text-sm text-text-muted whitespace-pre-wrap leading-relaxed">{note.text}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CommentsSection({ slug, recipeId }: { slug: string; recipeId: string }) {
+  const { data: me } = useMe();
+  const { data: comments = [], isLoading } = useComments(slug);
+  const create = useCreateComment(slug, recipeId);
+  const del = useDeleteComment(slug);
+  const [text, setText] = useState("");
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    create.mutate(trimmed, { onSuccess: () => setText("") });
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <h3 className="font-serif text-lg text-text">
+        Comments{comments.length > 0 && <span className="ml-2 text-sm font-sans font-normal text-text-muted">{comments.length}</span>}
+      </h3>
+
+      {/* Add comment */}
+      <form onSubmit={submit} className="flex flex-col gap-2">
+        <textarea
+          ref={inputRef}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Add a note or tip…"
+          rows={2}
+          className="w-full px-3 py-2.5 rounded-lg border border-border bg-bg text-text text-sm placeholder:text-text-dim focus:outline-none focus:ring-2 focus:ring-brand/25 focus:border-brand transition-colors resize-none"
+        />
+        <button
+          type="submit"
+          disabled={!text.trim() || create.isPending}
+          className="self-end px-4 py-1.5 rounded-full bg-brand text-brand-fg text-sm font-medium hover:bg-brand-ink transition-colors disabled:opacity-50"
+        >
+          {create.isPending ? "Posting…" : "Post"}
+        </button>
+      </form>
+
+      {/* Comment list */}
+      {isLoading ? (
+        <div className="text-sm text-text-muted">Loading…</div>
+      ) : comments.length === 0 ? (
+        <p className="text-sm text-text-muted">No comments yet.</p>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {comments.map((c) => {
+            const isOwn = me?.id === c.user?.id;
+            const author = c.user?.fullName ?? c.user?.username ?? "Someone";
+            const date = c.createdAt ? new Date(c.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "";
+            return (
+              <div key={c.id} className="bg-surface rounded-xl border border-border p-4 flex flex-col gap-2 group">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-brand-soft flex items-center justify-center text-brand-ink text-[10px] font-semibold shrink-0">
+                      {(c.user?.fullName ?? c.user?.username ?? "?")[0]?.toUpperCase()}
+                    </div>
+                    <span className="text-xs font-medium text-text">{author}</span>
+                    {date && <span className="text-xs text-text-dim">{date}</span>}
+                  </div>
+                  {isOwn && (
+                    <button
+                      onClick={() => del.mutate(c.id)}
+                      className="text-xs text-text-dim hover:text-danger opacity-0 group-hover:opacity-100 transition-all"
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+                <p className="text-sm text-text-muted leading-relaxed whitespace-pre-wrap">{c.text}</p>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function RecipeContent({ recipe, groupSlug }: { recipe: Recipe; groupSlug: string }) {
   const [detailTab, setDetailTab] = useState<"ingredients" | "nutrition">("ingredients");
   const [servings, setServings] = useState(recipe.recipeServings ?? 1);
   const [planModalOpen, setPlanModalOpen] = useState(false);
   const [shoppingModalOpen, setShoppingModalOpen] = useState(false);
+  const markMade = useMarkLastMade(recipe.slug ?? "");
 
   const baseServings = recipe.recipeServings ?? 1;
   const scaleFactor = servings / baseServings;
@@ -253,6 +391,16 @@ function RecipeContent({ recipe, groupSlug }: { recipe: Recipe; groupSlug: strin
       </nav>
 
       <RecipeHero recipe={recipe} />
+
+      {/* Rating + last-made */}
+      <div className="flex items-center justify-between flex-wrap gap-2 -mt-2">
+        <StarRating slug={recipe.slug ?? ""} rating={recipe.rating} />
+        {recipe.lastMade && (
+          <span className="text-xs text-text-muted">
+            Last made {new Date(recipe.lastMade).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+          </span>
+        )}
+      </div>
 
       {recipe.id && (
         <div className="flex flex-wrap gap-2">
@@ -278,6 +426,14 @@ function RecipeContent({ recipe, groupSlug }: { recipe: Recipe; groupSlug: strin
             <span>✏️</span>
             <span>Edit</span>
           </Link>
+          <button
+            onClick={() => markMade.mutate()}
+            disabled={markMade.isPending}
+            className="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-bg-elev text-sm font-medium text-text hover:border-brand hover:bg-brand-soft hover:text-brand-ink transition-colors disabled:opacity-50"
+          >
+            <span>🍳</span>
+            <span>{markMade.isPending ? "Saving…" : "Made this"}</span>
+          </button>
         </div>
       )}
 
@@ -344,15 +500,11 @@ function RecipeContent({ recipe, groupSlug }: { recipe: Recipe; groupSlug: strin
       </div>
 
       {recipe.notes && recipe.notes.length > 0 && (
-        <div className="bg-bg-sunken rounded-lg border border-border p-5 flex flex-col gap-3">
-          <h2 className="font-serif text-xl text-text">Notes</h2>
-          {recipe.notes.map((note, i) => (
-            <div key={i} className="flex flex-col gap-1">
-              {note.title && <h3 className="text-sm font-semibold text-text">{note.title}</h3>}
-              <p className="text-sm text-text-muted leading-relaxed">{note.text}</p>
-            </div>
-          ))}
-        </div>
+        <NotesSection notes={recipe.notes} />
+      )}
+
+      {recipe.id && recipe.slug && (
+        <CommentsSection slug={recipe.slug} recipeId={recipe.id} />
       )}
 
       {planModalOpen && recipe.id && (

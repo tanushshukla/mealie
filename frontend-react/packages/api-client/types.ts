@@ -85,12 +85,25 @@ export interface Nutrition {
   sugarContent?: string | null;
 }
 
+export interface RecipeComment {
+  id: string;
+  text: string;
+  createdAt?: string | null;
+  updateAt?: string | null;
+  user?: {
+    id: string;
+    username?: string | null;
+    fullName?: string | null;
+  } | null;
+}
+
 export interface Recipe extends RecipeSummary {
   recipeIngredient?: RecipeIngredient[];
   recipeInstructions?: RecipeStep[] | null;
   nutrition?: Nutrition | null;
   orgURL?: string | null;
   notes?: Array<{ title: string; text: string }> | null;
+  comments?: RecipeComment[] | null;
 }
 
 export interface PaginationData<T> {
