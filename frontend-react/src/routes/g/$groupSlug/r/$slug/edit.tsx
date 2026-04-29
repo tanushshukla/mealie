@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState, useCallback } from "react";
-import { useRecipe, useUpdateRecipe, useDeleteRecipe } from "../../../../../hooks/useRecipes";
+import { useState, useCallback, useRef } from "react";
+import { useRecipe, useUpdateRecipe, useDeleteRecipe, useUpdateRecipeImage } from "../../../../../hooks/useRecipes";
+import { recipeImageUrl } from "@api-client";
 import type { Recipe, RecipeTag, RecipeCategory } from "@api-client";
 
 export const Route = createFileRoute("/g/$groupSlug/r/$slug/edit")({
@@ -209,6 +210,61 @@ function DeleteConfirm({
 
 // ─── Edit form (receives loaded recipe) ──────────────────────────────────────
 
+function ImageUpload({ recipe }: { recipe: Recipe }) {
+  const upload = useUpdateRecipeImage(recipe.slug ?? "");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+
+  function handleFile(file: File) {
+    const reader = new FileReader();
+    reader.onload = (e) => setPreview(e.target?.result as string);
+    reader.readAsDataURL(file);
+    upload.mutate(file);
+  }
+
+  const src = preview ?? (recipe.id ? recipeImageUrl(recipe.id, "min") : null);
+
+  return (
+    <section className="flex flex-col gap-3">
+      <h2 className="font-serif text-lg text-text border-b border-border pb-2">Photo</h2>
+      <div
+        className="relative w-full aspect-[16/7] rounded-xl overflow-hidden bg-bg-elev border border-border border-dashed cursor-pointer group"
+        onClick={() => inputRef.current?.click()}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          const file = e.dataTransfer.files[0];
+          if (file?.type.startsWith("image/")) handleFile(file);
+        }}
+      >
+        {src ? (
+          <img src={src} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full text-text-dim gap-2">
+            <span className="text-3xl">📷</span>
+            <span className="text-sm">Click or drop an image</span>
+          </div>
+        )}
+        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+          <span className="text-white text-sm font-medium bg-black/50 px-4 py-2 rounded-full">
+            {upload.isPending ? "Uploading…" : "Change photo"}
+          </span>
+        </div>
+      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="sr-only"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleFile(file);
+        }}
+      />
+    </section>
+  );
+}
+
 function RecipeEditForm({ recipe, groupSlug }: { recipe: Recipe; groupSlug: string }) {
   const navigate = useNavigate();
   const update = useUpdateRecipe(recipe.slug ?? "");
@@ -299,6 +355,8 @@ function RecipeEditForm({ recipe, groupSlug }: { recipe: Recipe; groupSlug: stri
       </div>
 
       <h1 className="font-serif text-3xl text-text -mb-4">Edit recipe</h1>
+
+      <ImageUpload recipe={recipe} />
 
       {update.isError && (
         <p className="text-sm text-danger bg-danger/8 rounded-lg px-4 py-2.5">

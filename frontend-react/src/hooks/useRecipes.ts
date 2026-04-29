@@ -1,7 +1,8 @@
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { listRecipes, getRecipe, createRecipeFromUrl, createRecipeFromName, updateRecipe, deleteRecipe } from "@api-client";
+import { listRecipes, getRecipe, createRecipeFromUrl, createRecipeFromName, updateRecipe, deleteRecipe, updateRecipeImage } from "@api-client";
 import type { Recipe } from "@api-client";
 import type { RecipeListParams } from "@api-client";
+import { toast } from "../lib/toast";
 
 export const recipeKeys = {
   all: ["recipes"] as const,
@@ -39,7 +40,11 @@ export function useCreateRecipeFromUrl() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (url: string) => createRecipeFromUrl(url),
-    onSuccess: () => qc.invalidateQueries({ queryKey: recipeKeys.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: recipeKeys.all });
+      toast.success("Recipe imported");
+    },
+    onError: () => toast.error("Failed to import recipe"),
   });
 }
 
@@ -47,7 +52,11 @@ export function useCreateRecipeFromName() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (name: string) => createRecipeFromName(name),
-    onSuccess: () => qc.invalidateQueries({ queryKey: recipeKeys.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: recipeKeys.all });
+      toast.success("Recipe created");
+    },
+    onError: () => toast.error("Failed to create recipe"),
   });
 }
 
@@ -58,7 +67,9 @@ export function useUpdateRecipe(slug: string) {
     onSuccess: (updated) => {
       qc.setQueryData(recipeKeys.detail(updated.slug ?? slug), updated);
       qc.invalidateQueries({ queryKey: recipeKeys.all });
+      toast.success("Recipe saved");
     },
+    onError: () => toast.error("Failed to save recipe"),
   });
 }
 
@@ -66,6 +77,22 @@ export function useDeleteRecipe() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (slug: string) => deleteRecipe(slug),
-    onSuccess: () => qc.invalidateQueries({ queryKey: recipeKeys.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: recipeKeys.all });
+      toast.success("Recipe deleted");
+    },
+    onError: () => toast.error("Failed to delete recipe"),
+  });
+}
+
+export function useUpdateRecipeImage(slug: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => updateRecipeImage(slug, file),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: recipeKeys.detail(slug) });
+      toast.success("Photo updated");
+    },
+    onError: () => toast.error("Failed to upload photo"),
   });
 }

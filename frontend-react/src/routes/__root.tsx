@@ -13,6 +13,7 @@ import { Sidebar } from "../components/layout/Sidebar";
 import { Topbar } from "../components/layout/Topbar";
 import { MobileTabbar } from "../components/layout/MobileTabbar";
 import { MobileDrawer } from "../components/layout/MobileDrawer";
+import { Toaster } from "../components/layout/Toaster";
 
 interface RouterContext {
   queryClient: QueryClient;
@@ -111,6 +112,7 @@ function AppShell() {
           groupSlug={groupSlug}
         />
       )}
+      <Toaster />
     </div>
   );
 }

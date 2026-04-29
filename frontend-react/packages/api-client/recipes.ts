@@ -48,3 +48,14 @@ export async function updateRecipe(slug: string, data: Partial<import("./types")
 export async function deleteRecipe(slug: string): Promise<void> {
   return apiFetch<void>(`/api/recipes/${slug}`, { method: "DELETE" });
 }
+
+export async function updateRecipeImage(slug: string, file: File): Promise<{ image: string }> {
+  const ext = file.name.split(".").pop() ?? "jpg";
+  const form = new FormData();
+  form.append("image", file);
+  form.append("extension", ext);
+  return apiFetch<{ image: string }>(`/api/recipes/${slug}/image`, {
+    method: "PUT",
+    body: form,
+  });
+}

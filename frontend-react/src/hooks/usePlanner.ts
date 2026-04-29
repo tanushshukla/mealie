@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "../lib/toast";
 import {
   listMealPlans,
   createMealPlan,
@@ -70,7 +71,11 @@ export function useAddToMealPlan() {
   return useMutation({
     mutationFn: (entry: { date: string; entryType: PlanEntryType; recipeId?: string; title?: string }) =>
       createMealPlan(entry),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["mealplans"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["mealplans"] });
+      toast.success("Added to meal plan");
+    },
+    onError: () => toast.error("Failed to add to meal plan"),
   });
 }
 
@@ -79,6 +84,10 @@ export function useAddRecipeToShoppingList() {
   return useMutation({
     mutationFn: ({ listId, recipeId }: { listId: string; recipeId: string }) =>
       addRecipeToShoppingList(listId, recipeId),
-    onSuccess: (_, { listId }) => qc.invalidateQueries({ queryKey: plannerKeys.shoppingList(listId) }),
+    onSuccess: (_, { listId }) => {
+      qc.invalidateQueries({ queryKey: plannerKeys.shoppingList(listId) });
+      toast.success("Added to shopping list");
+    },
+    onError: () => toast.error("Failed to add to shopping list"),
   });
 }
