@@ -115,6 +115,12 @@ export interface PlanEntry {
   recipe?: RecipeSummary | null;
 }
 
+export interface ShoppingListItemRecipeRef {
+  recipeId: string;
+  recipeNote?: string | null;
+  recipeScale?: number | null;
+}
+
 export interface ShoppingListItem {
   id: string;
   shoppingListId: string;
@@ -126,12 +132,20 @@ export interface ShoppingListItem {
   food?: { name: string } | null;
   unit?: { name: string; abbreviation?: string } | null;
   label?: { name: string; color?: string } | null;
+  recipeReferences?: ShoppingListItemRecipeRef[];
+}
+
+export interface ShoppingListRecipeRef {
+  recipeId: string;
+  recipeScale?: number | null;
+  recipe: RecipeSummary;
 }
 
 export interface ShoppingList {
   id: string;
   name: string;
   listItems: ShoppingListItem[];
+  recipeReferences?: ShoppingListRecipeRef[];
 }
 
 export interface RecipeListParams {

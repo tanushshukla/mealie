@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState, useRef } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState, useRef, useEffect } from "react";
 import {
   useShoppingLists,
   useShoppingList,
@@ -9,12 +9,16 @@ import {
   useClearCheckedItems,
   useClearAllItems,
 } from "../../../../hooks/usePlanner";
+import { recipeImageUrl } from "@api-client";
+import type { ShoppingListItem, ShoppingListRecipeRef } from "@api-client";
 
 export const Route = createFileRoute("/g/$groupSlug/shopping/")({
   component: ShoppingPage,
 });
 
-function formatItem(item: import("@api-client").ShoppingListItem): string {
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatItem(item: ShoppingListItem): string {
   if (item.display) return item.display;
   const parts: string[] = [];
   if (item.quantity != null && item.quantity !== 0) parts.push(String(item.quantity));
@@ -23,6 +27,92 @@ function formatItem(item: import("@api-client").ShoppingListItem): string {
   if (item.note) parts.push(item.note);
   return parts.join(" ") || "Item";
 }
+
+function recipeNamesForItem(
+  item: ShoppingListItem,
+  recipeMap: Map<string, ShoppingListRecipeRef>,
+): string {
+  const names = (item.recipeReferences ?? [])
+    .map((r) => recipeMap.get(r.recipeId)?.recipe.name)
+    .filter(Boolean) as string[];
+  if (names.length === 0) return "";
+  if (names.length <= 2) return `for ${names.join(" & ")}`;
+  return `for ${names[0]} +${names.length - 1} more`;
+}
+
+// ─── Recipe popover ───────────────────────────────────────────────────────────
+
+function RecipePopover({
+  refs,
+  recipeMap,
+  groupSlug,
+  onClose,
+  anchorRef,
+}: {
+  refs: import("@api-client").ShoppingListItemRecipeRef[];
+  recipeMap: Map<string, ShoppingListRecipeRef>;
+  groupSlug: string;
+  onClose: () => void;
+  anchorRef: React.RefObject<HTMLButtonElement | null>;
+}) {
+  const navigate = useNavigate();
+  const popRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
+    function onClick(e: MouseEvent) {
+      if (popRef.current && !popRef.current.contains(e.target as Node) &&
+          anchorRef.current && !anchorRef.current.contains(e.target as Node)) {
+        onClose();
+      }
+    }
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onClick);
+    return () => { document.removeEventListener("keydown", onKey); document.removeEventListener("mousedown", onClick); };
+  }, [onClose, anchorRef]);
+
+  const recipes = refs.map((r) => recipeMap.get(r.recipeId)).filter(Boolean) as ShoppingListRecipeRef[];
+
+  return (
+    <div
+      ref={popRef}
+      className="absolute right-0 top-full mt-1 z-50 bg-surface border border-border rounded-xl shadow-lg w-64 overflow-hidden"
+    >
+      <div className="px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-text-dim border-b border-border">
+        Used in
+      </div>
+      {recipes.map((ref) => (
+        <button
+          key={ref.recipeId}
+          onClick={() => {
+            navigate({ to: "/g/$groupSlug/r/$slug", params: { groupSlug, slug: ref.recipe.slug ?? "" } });
+            onClose();
+          }}
+          className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-bg-elev transition-colors text-left"
+        >
+          {ref.recipe.id ? (
+            <img
+              src={recipeImageUrl(ref.recipe.id, "tiny")}
+              alt=""
+              className="w-10 h-10 rounded-lg object-cover shrink-0 bg-bg-muted"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-lg bg-bg-muted shrink-0" />
+          )}
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-medium text-text truncate">{ref.recipe.name}</div>
+            {ref.recipe.totalTime && (
+              <div className="text-xs text-text-muted">{ref.recipe.totalTime}</div>
+            )}
+          </div>
+          <span className="text-text-dim text-xs">›</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─── Clear-all confirm ────────────────────────────────────────────────────────
 
 function ClearAllConfirm({
   itemCount,
@@ -57,6 +147,8 @@ function ClearAllConfirm({
   );
 }
 
+// ─── Add-item form ────────────────────────────────────────────────────────────
+
 function AddItemForm({ listId }: { listId: string }) {
   const [text, setText] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -66,12 +158,7 @@ function AddItemForm({ listId }: { listId: string }) {
     e.preventDefault();
     const trimmed = text.trim();
     if (!trimmed) return;
-    create.mutate(trimmed, {
-      onSuccess: () => {
-        setText("");
-        inputRef.current?.focus();
-      },
-    });
+    create.mutate(trimmed, { onSuccess: () => { setText(""); inputRef.current?.focus(); } });
   }
 
   return (
@@ -95,7 +182,98 @@ function AddItemForm({ listId }: { listId: string }) {
   );
 }
 
+// ─── Item row ─────────────────────────────────────────────────────────────────
+
+function ItemRow({
+  item,
+  recipeMap,
+  groupSlug,
+  onToggle,
+  onDelete,
+}: {
+  item: ShoppingListItem;
+  recipeMap: Map<string, ShoppingListRecipeRef>;
+  groupSlug: string;
+  onToggle: () => void;
+  onDelete: () => void;
+}) {
+  const navigate = useNavigate();
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  const arrowRef = useRef<HTMLButtonElement>(null);
+
+  const refs = item.recipeReferences ?? [];
+  const linkedRecipes = refs.map((r) => recipeMap.get(r.recipeId)).filter(Boolean) as ShoppingListRecipeRef[];
+  const recipeSub = recipeNamesForItem(item, recipeMap);
+
+  function handleArrow() {
+    if (linkedRecipes.length === 1) {
+      navigate({ to: "/g/$groupSlug/r/$slug", params: { groupSlug, slug: linkedRecipes[0]!.recipe.slug ?? "" } });
+    } else {
+      setPopoverOpen((o) => !o);
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-3 px-4 py-3 border-b border-border last:border-0 hover:bg-bg-sunken/50 group transition-colors relative">
+      {/* Checkbox */}
+      <button
+        onClick={onToggle}
+        className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
+          item.checked ? "bg-brand border-brand text-brand-fg" : "border-border hover:border-brand"
+        }`}
+      >
+        {item.checked && <span className="text-[10px]">✓</span>}
+      </button>
+
+      {/* Label + recipe attribution */}
+      <div className="flex-1 min-w-0">
+        <span className={`text-sm leading-snug ${item.checked ? "line-through text-text-dim" : "text-text"}`}>
+          {formatItem(item)}
+        </span>
+        {recipeSub && (
+          <div className="text-xs text-text-muted mt-0.5 truncate">{recipeSub}</div>
+        )}
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-1 shrink-0">
+        <button
+          onClick={onDelete}
+          className="w-6 h-6 rounded-full flex items-center justify-center text-text-dim hover:text-danger hover:bg-danger/8 opacity-0 group-hover:opacity-100 transition-all text-xs"
+          title="Remove"
+        >
+          ✕
+        </button>
+        {linkedRecipes.length > 0 && (
+          <button
+            ref={arrowRef}
+            onClick={handleArrow}
+            className="w-7 h-7 rounded-full flex items-center justify-center text-text-muted hover:bg-bg-elev hover:text-brand transition-colors text-sm"
+            title={linkedRecipes.length === 1 ? `Go to ${linkedRecipes[0]!.recipe.name}` : "View recipes"}
+          >
+            ›
+          </button>
+        )}
+      </div>
+
+      {/* Multi-recipe popover */}
+      {popoverOpen && linkedRecipes.length > 1 && (
+        <RecipePopover
+          refs={refs}
+          recipeMap={recipeMap}
+          groupSlug={groupSlug}
+          onClose={() => setPopoverOpen(false)}
+          anchorRef={arrowRef}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 function ShoppingPage() {
+  const { groupSlug } = Route.useParams();
   const { data: lists = [], isLoading: listsLoading } = useShoppingLists();
   const [activeId, setActiveId] = useState<string>("");
   const resolvedId = activeId || lists[0]?.id || "";
@@ -112,7 +290,12 @@ function ShoppingPage() {
   const unchecked = items.filter((i) => !i.checked);
   const checkedCount = checked.length;
 
-  // Group unchecked by label, then append checked at bottom
+  // Build recipeId → ShoppingListRecipeRef map from the list-level recipe_references
+  const recipeMap = new Map<string, ShoppingListRecipeRef>();
+  for (const ref of list?.recipeReferences ?? []) {
+    recipeMap.set(ref.recipeId, ref);
+  }
+
   const groups = unchecked.reduce<Record<string, typeof items>>((acc, item) => {
     const key = item.label?.name ?? "Other";
     (acc[key] ??= []).push(item);
@@ -164,7 +347,7 @@ function ShoppingPage() {
         </div>
       </div>
 
-      {/* List tabs (if multiple lists) */}
+      {/* List tabs */}
       {lists.length > 1 && (
         <div className="flex gap-2 overflow-x-auto">
           {lists.map((l) => (
@@ -185,7 +368,6 @@ function ShoppingPage() {
 
       {/* List body */}
       <div className="bg-bg-elev border border-border rounded-xl overflow-hidden">
-        {/* Progress bar */}
         {items.length > 0 && (
           <div className="px-4 py-3 border-b border-border flex items-center gap-3">
             <div className="flex-1 h-2 rounded-full bg-bg-muted overflow-hidden">
@@ -200,7 +382,6 @@ function ShoppingPage() {
           </div>
         )}
 
-        {/* Add item input */}
         {resolvedId && <AddItemForm listId={resolvedId} />}
 
         {listLoading ? (
@@ -213,12 +394,12 @@ function ShoppingPage() {
           </div>
         ) : (
           <>
-            {/* Unchecked items grouped by label */}
             {Object.entries(groups).map(([groupName, groupItems]) => (
               <div key={groupName}>
                 {Object.keys(groups).length > 1 && (
-                  <div className="px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-text-dim bg-bg-sunken border-b border-border">
-                    {groupName}
+                  <div className="px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-text-dim bg-bg-sunken border-b border-border flex items-center justify-between">
+                    <span>{groupName}</span>
+                    <span className="font-normal">{groupItems.length} left</span>
                   </div>
                 )}
                 {groupItems
@@ -227,6 +408,8 @@ function ShoppingPage() {
                     <ItemRow
                       key={item.id}
                       item={item}
+                      recipeMap={recipeMap}
+                      groupSlug={groupSlug}
                       onToggle={() => toggle.mutate({ id: item.id, checked: !item.checked })}
                       onDelete={() => remove.mutate(item.id)}
                     />
@@ -234,7 +417,6 @@ function ShoppingPage() {
               </div>
             ))}
 
-            {/* Checked items */}
             {checked.length > 0 && (
               <div>
                 <div className="px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-text-dim bg-bg-sunken border-t border-b border-border">
@@ -244,6 +426,8 @@ function ShoppingPage() {
                   <ItemRow
                     key={item.id}
                     item={item}
+                    recipeMap={recipeMap}
+                    groupSlug={groupSlug}
                     onToggle={() => toggle.mutate({ id: item.id, checked: false })}
                     onDelete={() => remove.mutate(item.id)}
                   />
@@ -257,48 +441,11 @@ function ShoppingPage() {
       {clearAllOpen && (
         <ClearAllConfirm
           itemCount={items.length}
-          onConfirm={() => {
-            clearAll.mutate(items.map((i) => i.id), { onSuccess: () => setClearAllOpen(false) });
-          }}
+          onConfirm={() => clearAll.mutate(items.map((i) => i.id), { onSuccess: () => setClearAllOpen(false) })}
           onCancel={() => setClearAllOpen(false)}
           isPending={clearAll.isPending}
         />
       )}
-    </div>
-  );
-}
-
-function ItemRow({
-  item,
-  onToggle,
-  onDelete,
-}: {
-  item: import("@api-client").ShoppingListItem;
-  onToggle: () => void;
-  onDelete: () => void;
-}) {
-  return (
-    <div className="flex items-center gap-3 px-4 py-3 border-b border-border last:border-0 hover:bg-bg-sunken/50 group transition-colors">
-      <button
-        onClick={onToggle}
-        className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
-          item.checked ? "bg-brand border-brand text-brand-fg" : "border-border hover:border-brand"
-        }`}
-      >
-        {item.checked && <span className="text-[10px]">✓</span>}
-      </button>
-      <span
-        className={`text-sm flex-1 leading-snug ${item.checked ? "line-through text-text-dim" : "text-text"}`}
-      >
-        {formatItem(item)}
-      </span>
-      <button
-        onClick={onDelete}
-        className="w-6 h-6 rounded-full flex items-center justify-center text-text-dim hover:text-danger hover:bg-danger/8 opacity-0 group-hover:opacity-100 transition-all text-xs shrink-0"
-        title="Remove"
-      >
-        ✕
-      </button>
     </div>
   );
 }
